@@ -17,3 +17,7 @@ export function dividirEnLineas(contenido: string): Linea[] {
 
   return lineas;
 }
+
+export function contar(cantidad: number, singular: string, plural: string): string {
+  return `${cantidad.toLocaleString('es')} ${cantidad === 1 ? singular : plural}`;
+}

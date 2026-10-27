@@ -1,10 +1,11 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { Button, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { comandosEtiquetas, consultasEtiquetas } from '@/api/etiquetas';
+import { Boton } from '@/componentes/Boton';
 import { EstadoCarga } from '@/componentes/EstadoCarga';
 import { FormularioEtiqueta } from '@/componentes/FormularioEtiqueta';
-import { estilos } from '@/estilos';
 import { useCarga } from '@/hooks/useCarga';
+import { colores, estilos } from '@/tema';
 import { avisar, confirmar, mensajeDeError } from '@/utilidades/dialogos';
 
 export default function EditarEtiqueta() {
@@ -14,7 +15,12 @@ export default function EditarEtiqueta() {
   const { datos, error, cargando, recargar } = useCarga(() => consultasEtiquetas.obtener(etiquetaId));
 
   const eliminar = async () => {
-    if (!(await confirmar('Eliminar etiqueta', '¿Seguro que quieres eliminar esta etiqueta?'))) {
+    const aceptar = await confirmar(
+      'Eliminar etiqueta',
+      'Solo se puede eliminar si ninguna escena ni pista la usa.',
+      'Eliminar',
+    );
+    if (!aceptar) {
       return;
     }
     try {
@@ -26,7 +32,11 @@ export default function EditarEtiqueta() {
   };
 
   return (
-    <View style={estilos.pantalla}>
+    <ScrollView
+      style={{ backgroundColor: colores.fondo }}
+      contentContainerStyle={estilos.contenido}
+      keyboardShouldPersistTaps="handled"
+    >
       <Stack.Screen options={{ title: 'Editar etiqueta' }} />
       <EstadoCarga cargando={cargando && !datos} error={error} alReintentar={recargar} />
       {datos ? (
@@ -40,9 +50,10 @@ export default function EditarEtiqueta() {
               router.back();
             }}
           />
-          <Button title="Eliminar etiqueta" onPress={eliminar} />
+          <View style={estilos.separador} />
+          <Boton titulo="Eliminar etiqueta" variante="peligro" icono="trash-outline" alPresionar={eliminar} />
         </>
       ) : null}
-    </View>
+    </ScrollView>
   );
 }

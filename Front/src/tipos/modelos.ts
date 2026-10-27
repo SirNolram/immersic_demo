@@ -18,6 +18,7 @@ export interface CapituloResumen {
   titulo: string;
   caracteres: number;
   cantidadEscenas: number;
+  procesadoIa: boolean;
   creadoEn: string;
 }
 
@@ -88,7 +89,15 @@ export interface EscenaPlan {
 export interface PlanInmersion {
   capituloId: number;
   tituloCapitulo: string;
+  procesadoIa: boolean;
   escenas: EscenaPlan[];
+}
+
+export interface InmersionGenerada {
+  capituloId: number;
+  modelo: string;
+  cantidadEscenas: number;
+  escenas: Escena[];
 }
 
 export interface Recomendacion {

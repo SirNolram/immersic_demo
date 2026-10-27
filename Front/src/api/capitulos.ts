@@ -1,5 +1,7 @@
 import { solicitar } from './cliente';
-import type { Capitulo, CapituloEntrada, Escena, PlanInmersion } from '@/tipos/modelos';
+import type { Capitulo, CapituloEntrada, Escena, InmersionGenerada, PlanInmersion } from '@/tipos/modelos';
+
+const TIEMPO_GENERACION_MS = 180000;
 
 export const consultasCapitulos = {
   obtener: (id: number) => solicitar<Capitulo>(`/api/capitulos/${id}`),
@@ -13,4 +15,10 @@ export const comandosCapitulos = {
   actualizar: (id: number, datos: CapituloEntrada) =>
     solicitar<Capitulo>(`/api/capitulos/${id}`, { metodo: 'PUT', cuerpo: datos }),
   eliminar: (id: number) => solicitar<void>(`/api/capitulos/${id}`, { metodo: 'DELETE' }),
+  generarEscenas: (id: number, claveGemini: string) =>
+    solicitar<InmersionGenerada>(`/api/capitulos/${id}/inmersion`, {
+      metodo: 'POST',
+      encabezados: { 'X-Gemini-Api-Key': claveGemini },
+      tiempoEsperaMs: TIEMPO_GENERACION_MS,
+    }),
 };

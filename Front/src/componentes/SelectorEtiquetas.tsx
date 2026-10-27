@@ -1,5 +1,6 @@
-import { Pressable, Text, View } from 'react-native';
-import { estilos } from '@/estilos';
+import { Text, View } from 'react-native';
+import { Chip } from './Chip';
+import { estilos } from '@/tema';
 import type { EtiquetaResumen } from '@/tipos/modelos';
 
 interface Props {
@@ -19,18 +20,18 @@ export function SelectorEtiquetas({ etiquetas, seleccionadas, alCambiar, maximo 
   };
 
   return (
-    <View style={{ gap: 4 }}>
-      <Text>
-        Etiquetas ({seleccionadas.length}/{maximo})
+    <View style={{ gap: 10 }}>
+      <Text style={estilos.textoSuave}>
+        Emociones: {seleccionadas.length} de {maximo}. La etiqueta intenso solo acompaña a otra.
       </Text>
       <View style={estilos.fila}>
         {etiquetas.map((etiqueta) => (
-          <Pressable key={etiqueta.id} onPress={() => alternar(etiqueta.id)}>
-            <Text>
-              {seleccionadas.includes(etiqueta.id) ? '[x] ' : '[ ] '}
-              {etiqueta.nombre}
-            </Text>
-          </Pressable>
+          <Chip
+            key={etiqueta.id}
+            nombre={etiqueta.nombre}
+            seleccionado={seleccionadas.includes(etiqueta.id)}
+            alPresionar={() => alternar(etiqueta.id)}
+          />
         ))}
       </View>
     </View>

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Button, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Boton } from './Boton';
 import { Campo } from './Campo';
-import { estilos } from '@/estilos';
+import { estilos } from '@/tema';
 import { useAccion } from '@/hooks/useAccion';
 import type { EtiquetaEntrada } from '@/tipos/modelos';
 
@@ -20,11 +21,17 @@ export function FormularioEtiqueta({ inicial, textoBoton, alGuardar }: Props) {
     ejecutar(() => alGuardar({ nombre: nombre.trim(), descripcion: descripcion.trim() }));
 
   return (
-    <View style={{ gap: 12 }}>
-      <Campo etiqueta="Nombre (una palabra)" value={nombre} onChangeText={setNombre} maxLength={30} autoCapitalize="none" />
+    <View style={{ gap: 16 }}>
+      <Campo
+        etiqueta="Nombre (una palabra)"
+        value={nombre}
+        onChangeText={setNombre}
+        maxLength={30}
+        autoCapitalize="none"
+      />
       <Campo etiqueta="Descripción" value={descripcion} onChangeText={setDescripcion} maxLength={300} />
       {error ? <Text style={estilos.error}>{error}</Text> : null}
-      <Button title={ocupado ? 'Guardando...' : textoBoton} disabled={ocupado || !nombre.trim()} onPress={guardar} />
+      <Boton titulo={textoBoton} cargando={ocupado} deshabilitado={!nombre.trim()} alPresionar={guardar} />
     </View>
   );
 }

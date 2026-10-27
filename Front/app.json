@@ -5,13 +5,16 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "immersic",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0F1420",
     "ios": {
       "supportsTablet": true
     },
     "web": {
       "output": "single"
     },
-    "plugins": ["expo-router"]
+    "plugins": [
+      "expo-router"
+    ]
   }
 }

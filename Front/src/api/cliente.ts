@@ -17,6 +17,8 @@ interface Problema {
 interface Opciones {
   metodo?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   cuerpo?: unknown;
+  encabezados?: Record<string, string>;
+  tiempoEsperaMs?: number;
 }
 
 const TIEMPO_ESPERA_MS = 10000;
@@ -42,17 +44,24 @@ async function leerMensaje(respuesta: Response): Promise<string> {
 
 export async function solicitar<T>(ruta: string, opciones: Opciones = {}): Promise<T> {
   const controlador = new AbortController();
-  const temporizador = setTimeout(() => controlador.abort(), TIEMPO_ESPERA_MS);
+  const temporizador = setTimeout(() => controlador.abort(), opciones.tiempoEsperaMs ?? TIEMPO_ESPERA_MS);
+  const encabezados: Record<string, string> = { ...opciones.encabezados };
+  if (opciones.cuerpo !== undefined) {
+    encabezados['Content-Type'] = 'application/json';
+  }
 
   let respuesta: Response;
   try {
     respuesta = await fetch(`${urlBase}${ruta}`, {
       method: opciones.metodo ?? 'GET',
-      headers: opciones.cuerpo === undefined ? undefined : { 'Content-Type': 'application/json' },
+      headers: encabezados,
       body: opciones.cuerpo === undefined ? undefined : JSON.stringify(opciones.cuerpo),
       signal: controlador.signal,
     });
   } catch {
+    if (controlador.signal.aborted) {
+      throw new ErrorApi(0, 'El servidor tardó demasiado en responder.');
+    }
     throw new ErrorApi(0, `No se pudo conectar con el servidor (${urlBase}).`);
   } finally {
     clearTimeout(temporizador);

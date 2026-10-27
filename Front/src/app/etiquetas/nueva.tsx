@@ -1,14 +1,18 @@
 import { Stack, useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { ScrollView } from 'react-native';
 import { comandosEtiquetas } from '@/api/etiquetas';
 import { FormularioEtiqueta } from '@/componentes/FormularioEtiqueta';
-import { estilos } from '@/estilos';
+import { colores, estilos } from '@/tema';
 
 export default function NuevaEtiqueta() {
   const router = useRouter();
 
   return (
-    <View style={estilos.pantalla}>
+    <ScrollView
+      style={{ backgroundColor: colores.fondo }}
+      contentContainerStyle={estilos.contenido}
+      keyboardShouldPersistTaps="handled"
+    >
       <Stack.Screen options={{ title: 'Nueva etiqueta' }} />
       <FormularioEtiqueta
         textoBoton="Crear etiqueta"
@@ -17,6 +21,6 @@ export default function NuevaEtiqueta() {
           router.back();
         }}
       />
-    </View>
+    </ScrollView>
   );
 }

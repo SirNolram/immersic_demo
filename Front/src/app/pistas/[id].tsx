@@ -1,12 +1,13 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { Button, ScrollView } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { consultasEtiquetas } from '@/api/etiquetas';
 import { comandosPistas, consultasPistas } from '@/api/pistas';
+import { Boton } from '@/componentes/Boton';
 import { EstadoCarga } from '@/componentes/EstadoCarga';
 import { FormularioPista } from '@/componentes/FormularioPista';
-import { estilos } from '@/estilos';
 import { useCarga } from '@/hooks/useCarga';
+import { colores, estilos } from '@/tema';
 import { avisar, confirmar, mensajeDeError } from '@/utilidades/dialogos';
 
 export default function EditarPista() {
@@ -22,7 +23,7 @@ export default function EditarPista() {
   const { datos, error, cargando, recargar } = useCarga(cargar);
 
   const eliminar = async () => {
-    if (!(await confirmar('Eliminar pista', '¿Seguro que quieres eliminar esta pista?'))) {
+    if (!(await confirmar('Eliminar pista', 'Dejará de recomendarse en las escenas.', 'Eliminar'))) {
       return;
     }
     try {
@@ -34,7 +35,11 @@ export default function EditarPista() {
   };
 
   return (
-    <ScrollView contentContainerStyle={estilos.pantalla}>
+    <ScrollView
+      style={{ backgroundColor: colores.fondo }}
+      contentContainerStyle={estilos.contenido}
+      keyboardShouldPersistTaps="handled"
+    >
       <Stack.Screen options={{ title: 'Editar pista' }} />
       <EstadoCarga cargando={cargando && !datos} error={error} alReintentar={recargar} />
       {datos ? (
@@ -54,7 +59,8 @@ export default function EditarPista() {
               router.back();
             }}
           />
-          <Button title="Eliminar pista" onPress={eliminar} />
+          <View style={estilos.separador} />
+          <Boton titulo="Eliminar pista" variante="peligro" icono="trash-outline" alPresionar={eliminar} />
         </>
       ) : null}
     </ScrollView>

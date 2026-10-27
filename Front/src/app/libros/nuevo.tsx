@@ -1,14 +1,14 @@
 import { Stack, useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { ScrollView } from 'react-native';
 import { comandosLibros } from '@/api/libros';
 import { FormularioLibro } from '@/componentes/FormularioLibro';
-import { estilos } from '@/estilos';
+import { colores, estilos } from '@/tema';
 
 export default function NuevoLibro() {
   const router = useRouter();
 
   return (
-    <View style={estilos.pantalla}>
+    <ScrollView style={{ backgroundColor: colores.fondo }} contentContainerStyle={estilos.contenido}>
       <Stack.Screen options={{ title: 'Nuevo libro' }} />
       <FormularioLibro
         textoBoton="Crear libro"
@@ -17,6 +17,6 @@ export default function NuevoLibro() {
           router.replace(`/libros/${libro.id}`);
         }}
       />
-    </View>
+    </ScrollView>
   );
 }

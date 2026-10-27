@@ -4,21 +4,25 @@ import { consultasEtiquetas } from '@/api/etiquetas';
 import { comandosPistas } from '@/api/pistas';
 import { EstadoCarga } from '@/componentes/EstadoCarga';
 import { FormularioPista } from '@/componentes/FormularioPista';
-import { estilos } from '@/estilos';
 import { useCarga } from '@/hooks/useCarga';
+import { colores, estilos } from '@/tema';
 
 export default function NuevaPista() {
   const router = useRouter();
   const { datos, error, cargando, recargar } = useCarga(() => consultasEtiquetas.listar());
 
   return (
-    <ScrollView contentContainerStyle={estilos.pantalla}>
+    <ScrollView
+      style={{ backgroundColor: colores.fondo }}
+      contentContainerStyle={estilos.contenido}
+      keyboardShouldPersistTaps="handled"
+    >
       <Stack.Screen options={{ title: 'Nueva pista' }} />
       <EstadoCarga cargando={cargando && !datos} error={error} alReintentar={recargar} />
       {datos ? (
         <FormularioPista
           etiquetas={datos}
-          textoBoton="Crear pista"
+          textoBoton="Agregar pista"
           alGuardar={async (pista) => {
             await comandosPistas.crear(pista);
             router.back();

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Button, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Boton } from './Boton';
 import { Campo } from './Campo';
-import { estilos } from '@/estilos';
+import { estilos } from '@/tema';
 import { useAccion } from '@/hooks/useAccion';
 import type { LibroEntrada } from '@/tipos/modelos';
 
@@ -20,11 +21,11 @@ export function FormularioLibro({ inicial, textoBoton, alGuardar }: Props) {
     ejecutar(() => alGuardar({ titulo: titulo.trim(), autor: autor.trim() || null }));
 
   return (
-    <View style={{ gap: 12 }}>
+    <View style={{ gap: 16 }}>
       <Campo etiqueta="Título" value={titulo} onChangeText={setTitulo} maxLength={150} />
       <Campo etiqueta="Autor (opcional)" value={autor} onChangeText={setAutor} maxLength={100} />
       {error ? <Text style={estilos.error}>{error}</Text> : null}
-      <Button title={ocupado ? 'Guardando...' : textoBoton} disabled={ocupado || !titulo.trim()} onPress={guardar} />
+      <Boton titulo={textoBoton} cargando={ocupado} deshabilitado={!titulo.trim()} alPresionar={guardar} />
     </View>
   );
 }

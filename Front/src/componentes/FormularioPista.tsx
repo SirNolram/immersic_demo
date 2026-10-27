@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Button, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Boton } from './Boton';
 import { Campo } from './Campo';
 import { SelectorEtiquetas } from './SelectorEtiquetas';
-import { estilos } from '@/estilos';
+import { estilos } from '@/tema';
 import { useAccion } from '@/hooks/useAccion';
 import type { EtiquetaResumen, PistaEntrada } from '@/tipos/modelos';
 
@@ -31,22 +32,26 @@ export function FormularioPista({ etiquetas, inicial, textoBoton, alGuardar }: P
     );
 
   return (
-    <View style={{ gap: 12 }}>
+    <View style={{ gap: 16 }}>
       <Campo etiqueta="Nombre" value={nombre} onChangeText={setNombre} maxLength={150} />
       <Campo etiqueta="Artista (opcional)" value={artista} onChangeText={setArtista} maxLength={100} />
       <Campo
-        etiqueta="Archivo o enlace (opcional)"
+        etiqueta="Enlace de la canción (opcional)"
+        ayuda="Por ejemplo, el enlace de Spotify o YouTube donde la escuchas."
         value={archivoUrl}
         onChangeText={setArchivoUrl}
         maxLength={500}
         autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="url"
       />
       <SelectorEtiquetas etiquetas={etiquetas} seleccionadas={etiquetaIds} alCambiar={setEtiquetaIds} />
       {error ? <Text style={estilos.error}>{error}</Text> : null}
-      <Button
-        title={ocupado ? 'Guardando...' : textoBoton}
-        disabled={ocupado || !nombre.trim() || etiquetaIds.length === 0}
-        onPress={guardar}
+      <Boton
+        titulo={textoBoton}
+        cargando={ocupado}
+        deshabilitado={!nombre.trim() || etiquetaIds.length === 0}
+        alPresionar={guardar}
       />
     </View>
   );

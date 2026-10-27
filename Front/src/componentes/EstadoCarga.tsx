@@ -1,5 +1,6 @@
-import { ActivityIndicator, Button, Text, View } from 'react-native';
-import { estilos } from '@/estilos';
+import { ActivityIndicator, Text, View } from 'react-native';
+import { Boton } from './Boton';
+import { colores, estilos } from '@/tema';
 
 interface Props {
   cargando: boolean;
@@ -9,14 +10,14 @@ interface Props {
 
 export function EstadoCarga({ cargando, error, alReintentar }: Props) {
   if (cargando) {
-    return <ActivityIndicator />;
+    return <ActivityIndicator color={colores.texto} style={{ marginVertical: 24 }} />;
   }
 
   if (error) {
     return (
-      <View style={{ gap: 8 }}>
+      <View style={{ gap: 12, alignItems: 'flex-start' }}>
         <Text style={estilos.error}>{error}</Text>
-        <Button title="Reintentar" onPress={alReintentar} />
+        <Boton titulo="Reintentar" variante="secundario" icono="refresh" alPresionar={alReintentar} />
       </View>
     );
   }

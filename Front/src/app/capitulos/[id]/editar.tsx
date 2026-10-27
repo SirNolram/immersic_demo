@@ -1,71 +1,63 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Button, ScrollView, Text } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { comandosCapitulos, consultasCapitulos } from '@/api/capitulos';
-import { Campo } from '@/componentes/Campo';
+import { Boton } from '@/componentes/Boton';
 import { EstadoCarga } from '@/componentes/EstadoCarga';
-import { estilos } from '@/estilos';
-import { useAccion } from '@/hooks/useAccion';
+import { FormularioCapitulo } from '@/componentes/FormularioCapitulo';
 import { useCarga } from '@/hooks/useCarga';
-import { confirmar } from '@/utilidades/dialogos';
-
-const MAXIMO_CARACTERES = 60000;
+import { colores, estilos } from '@/tema';
+import { avisar, confirmar, mensajeDeError } from '@/utilidades/dialogos';
 
 export default function EditarCapitulo() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const capituloId = Number(id);
   const router = useRouter();
   const { datos, error, cargando, recargar } = useCarga(() => consultasCapitulos.obtener(capituloId));
-  const [titulo, setTitulo] = useState('');
-  const [contenido, setContenido] = useState('');
-  const accion = useAccion();
 
-  useEffect(() => {
-    if (datos) {
-      setTitulo(datos.titulo);
-      setContenido(datos.contenido);
+  const eliminar = async () => {
+    if (!datos || !(await confirmar('Eliminar capítulo', 'Se borrarán también sus escenas.', 'Eliminar'))) {
+      return;
     }
-  }, [datos]);
-
-  const guardar = () =>
-    accion.ejecutar(async () => {
-      if (!datos) {
-        return;
-      }
-      const cambiaTexto = contenido !== datos.contenido;
-      if (cambiaTexto && datos.cantidadEscenas > 0) {
-        const seguir = await confirmar(
-          'Guardar cambios',
-          'El texto cambió, así que se borrarán las escenas de este capítulo.',
-        );
-        if (!seguir) {
-          return;
-        }
-      }
-      await comandosCapitulos.actualizar(capituloId, { titulo: titulo.trim(), contenido });
-      router.back();
-    });
+    try {
+      await comandosCapitulos.eliminar(capituloId);
+      router.dismissTo(`/libros/${datos.libroId}`);
+    } catch (e) {
+      avisar('No se pudo eliminar', mensajeDeError(e));
+    }
+  };
 
   return (
-    <ScrollView contentContainerStyle={estilos.pantalla}>
+    <ScrollView
+      style={{ backgroundColor: colores.fondo }}
+      contentContainerStyle={estilos.contenido}
+      keyboardShouldPersistTaps="handled"
+    >
       <Stack.Screen options={{ title: 'Editar capítulo' }} />
       <EstadoCarga cargando={cargando && !datos} error={error} alReintentar={recargar} />
       {datos ? (
         <>
-          <Campo etiqueta="Título" value={titulo} onChangeText={setTitulo} maxLength={150} />
-          <Campo
-            etiqueta={`Contenido (${contenido.length}/${MAXIMO_CARACTERES})`}
-            value={contenido}
-            onChangeText={setContenido}
-            maxLength={MAXIMO_CARACTERES}
-            multiline
+          <FormularioCapitulo
+            key={datos.id}
+            inicial={{ titulo: datos.titulo, contenido: datos.contenido }}
+            textoBoton="Guardar cambios"
+            alGuardar={async (cambios) => {
+              const cambiaTexto = cambios.contenido !== datos.contenido;
+              if (cambiaTexto && datos.cantidadEscenas > 0) {
+                const seguir = await confirmar(
+                  'Guardar cambios',
+                  'El texto cambió, así que se borrarán las escenas de este capítulo.',
+                  'Guardar',
+                );
+                if (!seguir) {
+                  return;
+                }
+              }
+              await comandosCapitulos.actualizar(capituloId, cambios);
+              router.back();
+            }}
           />
-          {accion.error ? <Text style={estilos.error}>{accion.error}</Text> : null}
-          <Button
-            title={accion.ocupado ? 'Guardando...' : 'Guardar'}
-            disabled={accion.ocupado || !titulo.trim()}
-            onPress={guardar}
-          />
+          <View style={estilos.separador} />
+          <Boton titulo="Eliminar capítulo" variante="peligro" icono="trash-outline" alPresionar={eliminar} />
         </>
       ) : null}
     </ScrollView>

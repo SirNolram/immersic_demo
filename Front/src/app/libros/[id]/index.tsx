@@ -1,12 +1,15 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { Button, FlatList, Text, View } from 'react-native';
-import { comandosCapitulos } from '@/api/capitulos';
-import { comandosLibros, consultasLibros } from '@/api/libros';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { consultasLibros } from '@/api/libros';
+import { Boton } from '@/componentes/Boton';
+import { BotonIcono } from '@/componentes/BotonIcono';
 import { EstadoCarga } from '@/componentes/EstadoCarga';
-import { estilos } from '@/estilos';
+import { Fila } from '@/componentes/Fila';
+import { Vacio } from '@/componentes/Vacio';
 import { useCarga } from '@/hooks/useCarga';
-import { avisar, confirmar, mensajeDeError } from '@/utilidades/dialogos';
+import { colores, estilos } from '@/tema';
+import { contar } from '@/utilidades/texto';
 
 export default function DetalleLibro() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,67 +26,102 @@ export default function DetalleLibro() {
 
   const { datos, error, cargando, recargar } = useCarga(cargar);
 
-  const eliminarLibro = async () => {
-    if (!(await confirmar('Eliminar libro', 'Se borrarán también sus capítulos y escenas.'))) {
-      return;
-    }
-    try {
-      await comandosLibros.eliminar(libroId);
-      router.back();
-    } catch (e) {
-      avisar('No se pudo eliminar', mensajeDeError(e));
-    }
-  };
-
-  const eliminarCapitulo = async (capituloId: number) => {
-    if (!(await confirmar('Eliminar capítulo', 'Se borrarán también sus escenas.'))) {
-      return;
-    }
-    try {
-      await comandosCapitulos.eliminar(capituloId);
-      await recargar();
-    } catch (e) {
-      avisar('No se pudo eliminar', mensajeDeError(e));
-    }
-  };
+  const agregarCapitulo = () =>
+    router.push({ pathname: '/capitulos/nuevo', params: { libroId: String(libroId) } });
 
   return (
-    <View style={estilos.pantalla}>
-      <Stack.Screen options={{ title: datos?.libro.titulo ?? 'Libro' }} />
-      <EstadoCarga cargando={cargando && !datos} error={error} alReintentar={recargar} />
-      {datos ? (
-        <>
-          <Text>{datos.libro.autor ?? 'Sin autor'}</Text>
-          <View style={estilos.fila}>
-            <Button title="Editar libro" onPress={() => router.push(`/libros/${libroId}/editar`)} />
-            <Button title="Eliminar libro" onPress={eliminarLibro} />
-          </View>
-          <Button
-            title="Añadir capítulo"
-            onPress={() => router.push({ pathname: '/capitulos/nuevo', params: { libroId: String(libroId) } })}
-          />
-          <FlatList
-            data={datos.capitulos}
-            keyExtractor={(capitulo) => String(capitulo.id)}
-            ListEmptyComponent={<Text>Este libro todavía no tiene capítulos.</Text>}
-            renderItem={({ item }) => (
-              <View style={estilos.item}>
-                <Text style={estilos.titulo}>
-                  {item.numero}. {item.titulo}
-                </Text>
-                <Text>
-                  {item.caracteres} caracteres · {item.cantidadEscenas} escena(s)
-                </Text>
-                <View style={estilos.fila}>
-                  <Button title="Ver" onPress={() => router.push(`/capitulos/${item.id}`)} />
-                  <Button title="Editar" onPress={() => router.push(`/capitulos/${item.id}/editar`)} />
-                  <Button title="Eliminar" onPress={() => eliminarCapitulo(item.id)} />
+    <>
+      <Stack.Screen
+        options={{
+          title: '',
+          headerRight: () => (
+            <BotonIcono
+              icono="create-outline"
+              etiqueta="Editar libro"
+              alPresionar={() => router.push(`/libros/${libroId}/editar`)}
+            />
+          ),
+        }}
+      />
+      <FlatList
+        style={{ backgroundColor: colores.fondo }}
+        contentContainerStyle={estilos.lista}
+        data={datos?.capitulos ?? []}
+        keyExtractor={(capitulo) => String(capitulo.id)}
+        ListHeaderComponent={
+          <View style={estilos.cabeceraLista}>
+            <EstadoCarga cargando={cargando && !datos} error={error} alReintentar={recargar} />
+            {datos ? (
+              <>
+                <View style={{ gap: 6 }}>
+                  <Text style={estilos.titulo}>{datos.libro.titulo}</Text>
+                  <Text style={estilos.textoSuave}>{datos.libro.autor ?? 'Autor desconocido'}</Text>
                 </View>
-              </View>
-            )}
+                {datos.capitulos.length > 0 ? (
+                  <View style={[estilos.fila, { justifyContent: 'space-between' }]}>
+                    <Text style={estilos.seccion}>{contar(datos.capitulos.length, 'capítulo', 'capítulos')}</Text>
+                    <Boton titulo="Agregar capítulo" variante="secundario" icono="add" alPresionar={agregarCapitulo} />
+                  </View>
+                ) : null}
+              </>
+            ) : null}
+          </View>
+        }
+        ListEmptyComponent={
+          datos ? (
+            <Vacio
+              icono="document-text-outline"
+              mensaje="Este libro todavía no tiene capítulos. Pega el texto del primero."
+            >
+              <Boton titulo="Agregar capítulo" icono="add" alPresionar={agregarCapitulo} />
+            </Vacio>
+          ) : undefined
+        }
+        renderItem={({ item }) => (
+          <Fila
+            titulo={item.titulo}
+            detalle={
+              item.cantidadEscenas > 0
+                ? contar(item.cantidadEscenas, 'escena', 'escenas')
+                : item.caracteres > 0
+                  ? 'Sin escenas todavía'
+                  : 'Sin texto todavía'
+            }
+            inicio={<Text style={estilosLibro.numero}>{item.numero}</Text>}
+            pie={
+              item.procesadoIa ? (
+                <View style={estilosLibro.insignia}>
+                  <Text style={estilosLibro.textoInsignia}>Escenas generadas con IA</Text>
+                </View>
+              ) : null
+            }
+            alPresionar={() => router.push(`/capitulos/${item.id}`)}
           />
-        </>
-      ) : null}
-    </View>
+        )}
+      />
+    </>
   );
 }
+
+const estilosLibro = StyleSheet.create({
+  numero: {
+    width: 28,
+    color: colores.textoSuave,
+    fontSize: 17,
+    fontVariant: ['tabular-nums'],
+    textAlign: 'right',
+  },
+  insignia: {
+    alignSelf: 'flex-start',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colores.linea,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginTop: 2,
+  },
+  textoInsignia: {
+    color: colores.textoSuave,
+    fontSize: 12,
+  },
+});
