@@ -15,7 +15,7 @@ Readme.md
 
 | Parte | Tecnología |
 | --- | --- |
-| Frontend | Expo, React Native, TypeScript, Expo Router |
+| Frontend | Expo SDK 58, React Native, TypeScript, Expo Router |
 | Backend | .NET 8 (ASP.NET Core Web API), Entity Framework Core, Swagger |
 | Base de datos | SQLite |
 | Formato | JSON |
@@ -23,7 +23,7 @@ Readme.md
 ## Requisitos
 
 - [.NET SDK 8](https://dotnet.microsoft.com/download) o superior.
-- [Node.js 22](https://nodejs.org) (LTS).
+- [Node.js](https://nodejs.org) 22.13 o superior (también sirve la 24).
 - Para el celular: la app **Expo Go** y estar en la misma red Wi-Fi que el computador.
 
 ## Cómo ejecutar

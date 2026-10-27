@@ -32,16 +32,6 @@ jobs:
         with:
           node-version: 22
 
-      - name: Versiones de referencia del SDK actual
-        continue-on-error: true
-        run: |
-          cd "$RUNNER_TEMP"
-          npx --yes create-expo-app@latest referencia --template blank-typescript --no-install > crear.log 2>&1
-          cd referencia
-          npm install --no-audit --no-fund > instalar.log 2>&1
-          npx expo install expo-router expo-linking expo-constants expo-status-bar react-native-screens react-native-safe-area-context @react-native-async-storage/async-storage react-native-web react-dom > expo.log 2>&1
-          echo "::notice title=Referencia SDK::$(node -e "const p=require('./package.json');console.log(JSON.stringify({d:p.dependencies,dd:p.devDependencies}))")"
-
       - name: Instalar dependencias
         working-directory: Front
         run: |
@@ -62,7 +52,7 @@ jobs:
         if: always()
         working-directory: Front
         run: |
-          if ! npx tsc --noEmit > tsc.log 2>&1; then
+          if ! npm run --silent tipos > tsc.log 2>&1; then
             head -20 tsc.log | while IFS= read -r linea; do echo "::error title=TypeScript::$linea"; done
             exit 1
           fi
