@@ -34,6 +34,9 @@ PROCESO=$!
 fallar() {
   local detalle
   detalle="$(jq -r '.detail // .title // empty' "$RESPUESTA" 2>/dev/null || true)"
+  if [ -z "$detalle" ]; then
+    detalle="$(jq -c . "$RESPUESTA" 2>/dev/null | head -c 600 || true)"
+  fi
   echo "::error title=Prueba de punta a punta::$1${detalle:+ ($detalle)}"
   echo "--- respuesta"
   cat "$RESPUESTA" 2>/dev/null || true
@@ -153,8 +156,11 @@ pedir PUT "/api/pistas/$PISTA_CALMA" 200 "{\"nombre\":\"Puerto en calma\",\"arti
 comprobar "etiquetas de la pista actualizadas" '[.etiquetas[].nombre] | sort == ["calma", "feliz"]'
 
 echo "== Escenas"
-SEGUNDA="$(jq -n --arg c "$CONTENIDO" '$c | index("Esa noche")')"
-TERCERA="$(jq -n --arg c "$CONTENIDO" '$c | index("Al amanecer")')"
+posicion() {
+  python3 -c 'import sys; print(sys.argv[1].index(sys.argv[2]))' "$CONTENIDO" "$1"
+}
+SEGUNDA="$(posicion "Esa noche")"
+TERCERA="$(posicion "Al amanecer")"
 pedir POST "/api/capitulos/$CAPITULO/escenas" 201 "{\"posicionInicio\":$TERCERA,\"etiquetaIds\":[$FELIZ]}"
 pedir POST "/api/capitulos/$CAPITULO/escenas" 201 "{\"posicionInicio\":0,\"etiquetaIds\":[$CALMA]}"
 comprobar "orden según la posición" '.orden == 1'
