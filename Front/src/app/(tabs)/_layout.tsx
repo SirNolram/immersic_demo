@@ -7,7 +7,7 @@ import { colores } from '@/tema';
 
 function icono(activo: NombreIcono, inactivo: NombreIcono) {
   return ({ focused, color, size }: { focused: boolean; color: ColorValue; size: number }) => (
-    <Ionicons name={focused ? activo : inactivo} color={color} size={size} />
+    <Ionicons name={focused ? activo : inactivo} color={typeof color === 'string' ? color : undefined} size={size} />
   );
 }
 
