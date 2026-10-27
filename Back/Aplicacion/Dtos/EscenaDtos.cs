@@ -42,6 +42,8 @@ public record EscenaPlanDto(
     PistaDto? PistaRecomendada,
     int Afinidad);
 
-public record PlanInmersionDto(int CapituloId, string TituloCapitulo, List<EscenaPlanDto> Escenas);
+public record PlanInmersionDto(int CapituloId, string TituloCapitulo, bool ProcesadoIa, List<EscenaPlanDto> Escenas);
+
+public record InmersionGeneradaDto(int CapituloId, string Modelo, int CantidadEscenas, List<EscenaDto> Escenas);
 
 public record SaludDto(string Api, string Lectura, string Escritura, DateTime Fecha);

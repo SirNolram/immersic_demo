@@ -79,7 +79,7 @@ public class EscenasConsultas
             })
             .ToList();
 
-        return new PlanInmersionDto(capitulo.Id, capitulo.Titulo, plan);
+        return new PlanInmersionDto(capitulo.Id, capitulo.Titulo, capitulo.ProcesadoIa, plan);
     }
 
     private Task<string?> ObtenerContenidoAsync(int capituloId, CancellationToken cancelacion) =>

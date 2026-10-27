@@ -79,6 +79,7 @@ public class CapitulosComandos
         if (contenidoCambio)
         {
             existente.Contenido = entrada.Contenido!;
+            existente.ProcesadoIa = false;
         }
 
         await using (var transaccion = await _db.Database.BeginTransactionAsync(cancelacion))

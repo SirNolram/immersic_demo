@@ -5,19 +5,27 @@ RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TEMPORAL="$(mktemp -d)"
 RESPUESTA="$TEMPORAL/respuesta.json"
 API="http://127.0.0.1:5080"
+PUERTO_GEMINI=5090
 PROCESO=""
+GEMINI=""
 
 terminar() {
-  if [ -n "$PROCESO" ]; then
-    kill "$PROCESO" 2>/dev/null || true
-  fi
+  for pid in "$PROCESO" "$GEMINI"; do
+    if [ -n "$pid" ]; then
+      kill "$pid" 2>/dev/null || true
+    fi
+  done
 }
 trap terminar EXIT
+
+python3 "$RAIZ/.github/scripts/gemini-simulado.py" "$PUERTO_GEMINI" > "$TEMPORAL/gemini.log" 2>&1 &
+GEMINI=$!
 
 (
   cd "$RAIZ/Back"
   export ConnectionStrings__Escritura="Data Source=$TEMPORAL/prueba.db"
   export ConnectionStrings__Lectura="Data Source=$TEMPORAL/prueba.db"
+  export Gemini__UrlBase="http://127.0.0.1:$PUERTO_GEMINI/v1beta"
   export ASPNETCORE_URLS="$API"
   exec dotnet bin/Release/net8.0/Immersic.Api.dll
 ) > "$TEMPORAL/api.log" 2>&1 &
@@ -30,6 +38,8 @@ fallar() {
   echo
   echo "--- api.log"
   tail -n 60 "$TEMPORAL/api.log"
+  echo "--- gemini.log"
+  tail -n 20 "$TEMPORAL/gemini.log" 2>/dev/null || true
   exit 1
 }
 
@@ -53,6 +63,16 @@ pedir() {
     fallar "$metodo $ruta respondió $codigo y se esperaba $esperado"
   fi
   echo "ok     $metodo $ruta -> $codigo"
+}
+
+generar() {
+  local capitulo="$1" clave="$2" esperado="$3"
+  local codigo
+  codigo="$(curl -s -o "$RESPUESTA" -w "%{http_code}" -X POST "$API/api/capitulos/$capitulo/inmersion" -H "X-Gemini-Api-Key: $clave")"
+  if [ "$codigo" != "$esperado" ]; then
+    fallar "POST /api/capitulos/$capitulo/inmersion con \"$clave\" respondió $codigo y se esperaba $esperado"
+  fi
+  echo "ok     POST /api/capitulos/$capitulo/inmersion ($clave) -> $codigo"
 }
 
 campo() {
@@ -151,10 +171,38 @@ pedir DELETE "/api/escenas/$ESCENA_MEDIA" 204
 pedir GET "/api/capitulos/$CAPITULO/escenas" 200
 comprobar "orden recalculado al eliminar" '[.[].orden] == [1, 2]'
 
+echo "== Inmersión con Gemini"
+pedir POST "/api/capitulos/$CAPITULO/inmersion" 400
+generar "$CAPITULO" "clave con espacios" 400
+generar "$CAPITULO" clave-invalida 401
+generar "$CAPITULO" clave-sin-permiso 403
+generar "$CAPITULO" clave-bloqueada 422
+generar "$CAPITULO" clave-sin-cuota 429
+pedir GET "/api/capitulos/$CAPITULO" 200
+comprobar "un error de Gemini no toca las escenas" '.cantidadEscenas == 2 and .procesadoIa == false'
+generar "$CAPITULO" clave-valida 200
+comprobar "tres escenas ubicadas en el texto" "[.escenas[].posicionInicio] == [0, $SEGUNDA, $TERCERA] and .cantidadEscenas == 3"
+comprobar "etiquetas de la IA" '[.escenas[] | [.etiquetas[].nombre] | sort] == [["calma"], ["intenso", "terror"], ["feliz"]]'
+comprobar "fragmento tomado del texto original" '.escenas[1].fragmentoInicio | startswith("Esa noche algo golpeó")'
+pedir GET "/api/capitulos/$CAPITULO" 200
+comprobar "capítulo marcado como procesado" '.procesadoIa == true and .cantidadEscenas == 3'
+pedir GET "/api/capitulos/$CAPITULO/inmersion" 200
+comprobar "plan con la pista de terror" '.procesadoIa == true and .escenas[1].pistaRecomendada.nombre == "Sombras del faro"'
+if grep -rqs "clave-valida" "$TEMPORAL"/prueba.db* "$TEMPORAL/api.log"; then
+  fallar "La API key quedó guardada"
+fi
+echo "ok     la API key no se guarda"
+pedir DELETE "/api/capitulos/$CAPITULO/escenas" 204
+pedir GET "/api/capitulos/$CAPITULO" 200
+comprobar "al borrar las escenas deja de estar procesado" '.procesadoIa == false and .cantidadEscenas == 0'
+generar "$CAPITULO" clave-valida 200
+generar "$EPILOGO" clave-valida 400
+generar 999999 clave-valida 404
+
 echo "== Integridad"
 pedir DELETE "/api/etiquetas/$CALMA" 409
 pedir PUT "/api/capitulos/$CAPITULO" 200 '{"titulo":"La tormenta","contenido":"Texto nuevo del capítulo."}'
-comprobar "al cambiar el texto se borran las escenas" '.cantidadEscenas == 0'
+comprobar "al cambiar el texto se borran las escenas" '.cantidadEscenas == 0 and .procesadoIa == false'
 pedir DELETE "/api/pistas/$PISTA_TERROR" 204
 pedir DELETE "/api/libros/$LIBRO" 204
 pedir GET "/api/capitulos/$EPILOGO" 404
@@ -162,6 +210,7 @@ pedir GET "/api/capitulos/$EPILOGO" 404
 echo "== Documentación"
 pedir GET /swagger/v1/swagger.json 200
 comprobar "Swagger separa consultas y comandos" '[.paths["/api/libros"] | keys[]] | sort == ["get", "post"]'
+comprobar "Swagger pide la API key en el encabezado" '.paths["/api/capitulos/{id}/inmersion"].post.parameters | map(select(.in == "header" and .name == "X-Gemini-Api-Key")) | length == 1'
 
 echo
 echo "Prueba de punta a punta completada sin errores."

@@ -46,6 +46,8 @@ public abstract class ControladorBase : ControllerBase
                 return Problem(detail: fallo.Mensaje, statusCode: StatusCodes.Status404NotFound, title: "Recurso no encontrado");
             case TipoFallo.Conflicto:
                 return Problem(detail: fallo.Mensaje, statusCode: StatusCodes.Status409Conflict, title: "Conflicto con los datos existentes");
+            case TipoFallo.Externo:
+                return Problem(detail: fallo.Mensaje, statusCode: fallo.Estado, title: fallo.Titulo);
             default:
                 ModelState.AddModelError(fallo.Campo, fallo.Mensaje);
                 return ValidationProblem(title: "La solicitud tiene datos inválidos.", modelStateDictionary: ModelState);

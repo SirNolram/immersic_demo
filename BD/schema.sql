@@ -8,12 +8,13 @@ CREATE TABLE IF NOT EXISTS libros (
 );
 
 CREATE TABLE IF NOT EXISTS capitulos (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    libro_id   INTEGER NOT NULL REFERENCES libros (id) ON DELETE CASCADE,
-    numero     INTEGER NOT NULL CHECK (numero >= 1),
-    titulo     TEXT    NOT NULL CHECK (length(titulo) BETWEEN 1 AND 150),
-    contenido  TEXT    NOT NULL DEFAULT '' CHECK (length(contenido) <= 60000),
-    creado_en  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    libro_id      INTEGER NOT NULL REFERENCES libros (id) ON DELETE CASCADE,
+    numero        INTEGER NOT NULL CHECK (numero >= 1),
+    titulo        TEXT    NOT NULL CHECK (length(titulo) BETWEEN 1 AND 150),
+    contenido     TEXT    NOT NULL DEFAULT '' CHECK (length(contenido) <= 60000),
+    procesado_ia  INTEGER NOT NULL DEFAULT 0 CHECK (procesado_ia IN (0, 1)),
+    creado_en     TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now')),
     CONSTRAINT uq_capitulos_libro_numero UNIQUE (libro_id, numero)
 );
 

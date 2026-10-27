@@ -20,6 +20,9 @@ public class Capitulo
     [Column("contenido")]
     public string Contenido { get; set; } = string.Empty;
 
+    [Column("procesado_ia")]
+    public bool ProcesadoIa { get; set; }
+
     [Column("creado_en")]
     public DateTime CreadoEn { get; set; }
 

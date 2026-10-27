@@ -1,9 +1,12 @@
 using Immersic.Api.Aplicacion.Comandos;
+using Immersic.Api.Aplicacion.Comun;
 using Immersic.Api.Aplicacion.Consultas;
 using Immersic.Api.Infraestructura;
+using Immersic.Api.Infraestructura.Gemini;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +30,14 @@ builder.Services.AddScoped<CapitulosComandos>();
 builder.Services.AddScoped<EscenasComandos>();
 builder.Services.AddScoped<EtiquetasComandos>();
 builder.Services.AddScoped<PistasComandos>();
+builder.Services.AddScoped<InmersionComandos>();
+
+builder.Services.Configure<OpcionesGemini>(builder.Configuration.GetSection(OpcionesGemini.Seccion));
+builder.Services.AddHttpClient<IAnalizadorEscenas, ClienteGemini>((proveedor, cliente) =>
+{
+    var opciones = proveedor.GetRequiredService<IOptions<OpcionesGemini>>().Value;
+    cliente.Timeout = TimeSpan.FromSeconds(opciones.TiempoEsperaSegundos);
+});
 
 builder.Services.AddCors(opciones => opciones.AddDefaultPolicy(politica => politica
     .AllowAnyOrigin()
@@ -58,7 +69,7 @@ builder.Services.AddSwaggerGen(opciones =>
     {
         Title = "Immersic API",
         Version = "v1",
-        Description = "API REST de Immersic con operaciones de lectura (consultas) y escritura (comandos) separadas.",
+        Description = "API REST de Immersic con operaciones de lectura (consultas) y escritura (comandos) separadas. La generación de escenas usa la API key de Gemini de cada usuario, enviada en el encabezado X-Gemini-Api-Key, y no se guarda.",
     });
 });
 

@@ -31,6 +31,7 @@ public class CapitulosConsultas
                 c.Titulo,
                 c.Contenido.Length,
                 c.Escenas.Count,
+                c.ProcesadoIa,
                 c.CreadoEn))
             .ToListAsync(cancelacion);
 

@@ -23,6 +23,7 @@ public static class Mapeos
             capitulo.Contenido,
             capitulo.Contenido.Length,
             cantidadEscenas,
+            capitulo.ProcesadoIa,
             capitulo.CreadoEn);
 
     public static PistaDto APistaDto(Pista pista) =>

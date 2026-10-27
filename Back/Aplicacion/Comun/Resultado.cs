@@ -5,15 +5,19 @@ public enum TipoFallo
     NoEncontrado,
     Conflicto,
     Invalido,
+    Externo,
 }
 
-public sealed record Fallo(TipoFallo Tipo, string Mensaje, string Campo = "")
+public sealed record Fallo(TipoFallo Tipo, string Mensaje, string Campo = "", int Estado = 0, string Titulo = "")
 {
     public static Fallo NoEncontrado(string mensaje) => new(TipoFallo.NoEncontrado, mensaje);
 
     public static Fallo Conflicto(string mensaje) => new(TipoFallo.Conflicto, mensaje);
 
     public static Fallo Invalido(string campo, string mensaje) => new(TipoFallo.Invalido, mensaje, campo);
+
+    public static Fallo Externo(int estado, string titulo, string mensaje) =>
+        new(TipoFallo.Externo, mensaje, Estado: estado, Titulo: titulo);
 }
 
 public sealed class Resultado<T>

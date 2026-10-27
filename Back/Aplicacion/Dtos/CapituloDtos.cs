@@ -22,6 +22,7 @@ public record CapituloResumenDto(
     string Titulo,
     int Caracteres,
     int CantidadEscenas,
+    bool ProcesadoIa,
     DateTime CreadoEn);
 
 public record CapituloDto(
@@ -32,4 +33,5 @@ public record CapituloDto(
     string Contenido,
     int Caracteres,
     int CantidadEscenas,
+    bool ProcesadoIa,
     DateTime CreadoEn);

@@ -125,12 +125,17 @@ public class EscenasComandos
 
     public async Task<Resultado<bool>> EliminarTodasAsync(int capituloId, CancellationToken cancelacion)
     {
-        if (!await _db.Capitulos.AnyAsync(c => c.Id == capituloId, cancelacion))
+        var capitulo = await _db.Capitulos.FirstOrDefaultAsync(c => c.Id == capituloId, cancelacion);
+        if (capitulo is null)
         {
             return Fallo.NoEncontrado($"No existe un capítulo con id {capituloId}.");
         }
 
+        await using var transaccion = await _db.Database.BeginTransactionAsync(cancelacion);
         await _db.Escenas.Where(e => e.CapituloId == capituloId).ExecuteDeleteAsync(cancelacion);
+        capitulo.ProcesadoIa = false;
+        await _db.SaveChangesAsync(cancelacion);
+        await transaccion.CommitAsync(cancelacion);
         return true;
     }
 
