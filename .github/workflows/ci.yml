@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  EXPO_NO_TELEMETRY: 1
+
+jobs:
+  back:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Compilar
+        run: dotnet build Back/Immersic.Api.csproj -c Release
+
+      - name: Prueba de punta a punta
+        run: bash .github/scripts/prueba-humo.sh
+
+  front:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Versiones de referencia del SDK actual
+        continue-on-error: true
+        run: |
+          cd "$RUNNER_TEMP"
+          npx --yes create-expo-app@latest referencia --template blank-typescript --no-install > crear.log 2>&1
+          cd referencia
+          npm install --no-audit --no-fund > instalar.log 2>&1
+          npx expo install expo-router expo-linking expo-constants expo-status-bar react-native-screens react-native-safe-area-context @react-native-async-storage/async-storage react-native-web react-dom > expo.log 2>&1
+          echo "::notice title=Referencia SDK::$(node -e "const p=require('./package.json');console.log(JSON.stringify({d:p.dependencies,dd:p.devDependencies}))")"
+
+      - name: Instalar dependencias
+        working-directory: Front
+        run: |
+          if ! npm install --no-audit --no-fund > instalar.log 2>&1; then
+            echo "::error title=npm install::$(grep -E 'ERESOLVE|ETARGET|notarget|peer|Could not resolve|No matching' instalar.log | head -8 | tr '\n' ' ')"
+            exit 1
+          fi
+
+      - name: Revisar versiones del SDK
+        working-directory: Front
+        run: |
+          if ! npx expo install --check > revision.log 2>&1; then
+            echo "::warning title=expo install --check::$(tail -15 revision.log | tr '\n' ' ')"
+            exit 1
+          fi
+
+      - name: Revisar tipos
+        if: always()
+        working-directory: Front
+        run: |
+          if ! npx tsc --noEmit > tsc.log 2>&1; then
+            head -20 tsc.log | while IFS= read -r linea; do echo "::error title=TypeScript::$linea"; done
+            exit 1
+          fi
+
+      - name: Empaquetar web y Android
+        if: always()
+        working-directory: Front
+        run: |
+          if ! npx expo export --platform web --output-dir "$RUNNER_TEMP/web" > web.log 2>&1; then
+            echo "::error title=Export web::$(grep -iE 'error|unable|cannot' web.log | head -8 | tr '\n' ' ')"
+            exit 1
+          fi
+          if ! npx expo export --platform android --output-dir "$RUNNER_TEMP/android" > android.log 2>&1; then
+            echo "::error title=Export Android::$(grep -iE 'error|unable|cannot' android.log | head -8 | tr '\n' ' ')"
+            exit 1
+          fi
