@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Immersic.Api.Aplicacion.Comun;
@@ -42,7 +42,10 @@ public class ClienteGemini : IAnalizadorEscenas
         var url = $"{_opciones.UrlBase.TrimEnd('/')}/models/{Uri.EscapeDataString(_opciones.Modelo)}:generateContent";
         using var solicitud = new HttpRequestMessage(HttpMethod.Post, url)
         {
-            Content = JsonContent.Create(InstruccionesGemini.CrearCuerpo(texto, etiquetas)),
+            Content = new StringContent(
+                JsonSerializer.Serialize(InstruccionesGemini.CrearCuerpo(texto, etiquetas)),
+                Encoding.UTF8,
+                "application/json"),
         };
         solicitud.Headers.TryAddWithoutValidation("x-goog-api-key", claveApi);
 

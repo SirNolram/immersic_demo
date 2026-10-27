@@ -32,7 +32,9 @@ GEMINI=$!
 PROCESO=$!
 
 fallar() {
-  echo "::error title=Prueba de punta a punta::$1"
+  local detalle
+  detalle="$(jq -r '.detail // .title // empty' "$RESPUESTA" 2>/dev/null || true)"
+  echo "::error title=Prueba de punta a punta::$1${detalle:+ ($detalle)}"
   echo "--- respuesta"
   cat "$RESPUESTA" 2>/dev/null || true
   echo
