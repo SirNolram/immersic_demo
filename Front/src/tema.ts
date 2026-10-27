@@ -25,7 +25,7 @@ const coloresEmocion: Record<string, string> = {
   perdida: '#8391AD',
   romance: '#E57A9A',
   terror: '#D0494E',
-  epico: '#E8C25A',
+  epico: '#D46BC8',
   feliz: '#F2D16B',
   triste: '#5C86C4',
   combate: '#D9603B',

@@ -40,7 +40,7 @@ export default function LeerCapitulo() {
         options={{
           title: '',
           headerRight: () => (
-            <View style={estilos.fila}>
+            <View style={[estilos.fila, { marginRight: 8 }]}>
               <BotonIcono
                 icono="layers-outline"
                 etiqueta="Escenas"
@@ -158,8 +158,12 @@ function Musica({ pista }: { pista: Pista | null }) {
       <Ionicons name="musical-note" size={16} color={colores.texto} />
       <Text style={estilosLector.pista} numberOfLines={1}>
         {pista.nombre}
-        {pista.artista ? <Text style={estilos.textoSuave}>  {pista.artista}</Text> : null}
       </Text>
+      {pista.artista ? (
+        <Text style={[estilos.textoSuave, { flexShrink: 1 }]} numberOfLines={1}>
+          {pista.artista}
+        </Text>
+      ) : null}
       {enlace ? <Ionicons name="open-outline" size={15} color={colores.textoSuave} /> : null}
     </Pressable>
   );

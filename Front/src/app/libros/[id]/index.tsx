@@ -35,11 +35,13 @@ export default function DetalleLibro() {
         options={{
           title: '',
           headerRight: () => (
-            <BotonIcono
-              icono="create-outline"
-              etiqueta="Editar libro"
-              alPresionar={() => router.push(`/libros/${libroId}/editar`)}
-            />
+            <View style={{ marginRight: 8 }}>
+              <BotonIcono
+                icono="create-outline"
+                etiqueta="Editar libro"
+                alPresionar={() => router.push(`/libros/${libroId}/editar`)}
+              />
+            </View>
           ),
         }}
       />

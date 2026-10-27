@@ -24,7 +24,8 @@ const colorTexto: Record<Variante, string> = {
 
 export function Boton({ titulo, alPresionar, variante = 'principal', icono, deshabilitado, cargando }: Props) {
   const inactivo = deshabilitado || cargando;
-  const color = colorTexto[variante];
+  const apagado = deshabilitado && !cargando;
+  const color = apagado && variante === 'principal' ? colores.textoSuave : colorTexto[variante];
 
   return (
     <Pressable
@@ -36,7 +37,7 @@ export function Boton({ titulo, alPresionar, variante = 'principal', icono, desh
         estilosBoton.base,
         estilosBoton[variante],
         pressed && estilosBoton.presionado,
-        inactivo && estilosBoton.inactivo,
+        apagado && (variante === 'principal' ? estilosBoton.principalApagado : estilosBoton.apagado),
       ]}
     >
       {cargando ? (
@@ -74,7 +75,10 @@ const estilosBoton = StyleSheet.create({
   presionado: {
     opacity: 0.75,
   },
-  inactivo: {
+  principalApagado: {
+    backgroundColor: colores.superficieAlta,
+  },
+  apagado: {
     opacity: 0.45,
   },
   texto: {

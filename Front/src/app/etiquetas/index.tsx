@@ -17,7 +17,9 @@ export default function Etiquetas() {
         options={{
           title: 'Emociones',
           headerRight: () => (
-            <BotonIcono icono="add" etiqueta="Agregar etiqueta" alPresionar={() => router.push('/etiquetas/nueva')} />
+            <View style={{ marginRight: 8 }}>
+              <BotonIcono icono="add" etiqueta="Agregar etiqueta" alPresionar={() => router.push('/etiquetas/nueva')} />
+            </View>
           ),
         }}
       />
