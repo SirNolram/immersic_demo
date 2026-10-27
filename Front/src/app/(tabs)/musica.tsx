@@ -58,7 +58,7 @@ export default function Musica() {
       <FlatList
         data={datos?.pistas ?? []}
         keyExtractor={(pista) => String(pista.id)}
-        ListEmptyComponent={cargando || error ? null : <Text>No hay pistas.</Text>}
+        ListEmptyComponent={cargando || error ? undefined : <Text>No hay pistas.</Text>}
         renderItem={({ item }) => (
           <Pressable style={estilos.item} onPress={() => router.push(`/pistas/${item.id}`)}>
             <Text style={estilos.titulo}>{item.nombre}</Text>
