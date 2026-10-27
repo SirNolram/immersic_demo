@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Immersic",
+    "slug": "immersic-demo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "immersic",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "web": {
+      "output": "single"
+    },
+    "plugins": ["expo-router"]
+  }
+}
