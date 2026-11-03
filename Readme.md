@@ -1,6 +1,6 @@
 # Immersic
 
-Aplicación móvil de lectura con música. El usuario organiza sus libros por capítulos y cada capítulo se divide en escenas con etiquetas de emoción (calma, misterio, terror…). Las escenas las puede proponer Gemini con la API key del propio usuario o se pueden marcar a mano. Con esas emociones, la aplicación indica qué pista de su música corresponde a cada escena.
+Aplicación móvil de lectura con música. El usuario organiza sus libros por capítulos y cada capítulo se divide en escenas con etiquetas de emoción (calma, misterio, terror…). Las escenas las puede proponer Gemini con la API key del propio usuario o se pueden marcar a mano. Con esas emociones, la aplicación indica qué pista de su música corresponde a cada escena. A continuación el Readme hecho con IA.
 
 ## Estructura
 
