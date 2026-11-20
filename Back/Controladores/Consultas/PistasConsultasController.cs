@@ -27,4 +27,13 @@ public class PistasConsultasController : ControladorBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PistaDto>> Obtener(int id, CancellationToken cancelacion) =>
         Responder(await _consultas.ObtenerAsync(id, cancelacion));
+
+    [HttpGet("{id:int}/audio")]
+    [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK, "audio/mpeg", "audio/mp4", "audio/aac", "audio/wav")]
+    [ProducesResponseType(StatusCodes.Status206PartialContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Audio(int id, CancellationToken cancelacion) =>
+        ResponderCon(
+            await _consultas.ObtenerAudioAsync(id, cancelacion),
+            audio => PhysicalFile(audio.Ruta, audio.TipoContenido, enableRangeProcessing: true));
 }

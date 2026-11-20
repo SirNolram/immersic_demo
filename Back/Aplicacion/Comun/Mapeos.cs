@@ -34,7 +34,9 @@ public static class Mapeos
             pista.Id,
             pista.Nombre,
             pista.Artista,
-            pista.ArchivoUrl,
+            pista.NombreOriginal,
+            pista.TamanoBytes,
+            $"/api/pistas/{pista.Id}/audio",
             etiquetas.OrderBy(etiqueta => etiqueta.Id).Select(AEtiquetaResumen).ToList());
 
     public static List<EscenaDto> AEscenasDto(

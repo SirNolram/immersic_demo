@@ -35,10 +35,13 @@ CREATE TABLE IF NOT EXISTS etiquetas (
 );
 
 CREATE TABLE IF NOT EXISTS pistas (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre       TEXT    NOT NULL CHECK (length(nombre) BETWEEN 1 AND 150),
-    artista      TEXT             CHECK (artista IS NULL OR length(artista) <= 100),
-    archivo_url  TEXT             CHECK (archivo_url IS NULL OR length(archivo_url) <= 500)
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre           TEXT    NOT NULL CHECK (length(nombre) BETWEEN 1 AND 150),
+    artista          TEXT             CHECK (artista IS NULL OR length(artista) <= 100),
+    archivo          TEXT    NOT NULL UNIQUE CHECK (length(archivo) BETWEEN 1 AND 100),
+    nombre_original  TEXT    NOT NULL CHECK (length(nombre_original) BETWEEN 1 AND 255),
+    tipo_contenido   TEXT    NOT NULL CHECK (length(tipo_contenido) BETWEEN 1 AND 50),
+    tamano_bytes     INTEGER NOT NULL CHECK (tamano_bytes > 0)
 );
 
 CREATE TABLE IF NOT EXISTS escena_etiquetas (

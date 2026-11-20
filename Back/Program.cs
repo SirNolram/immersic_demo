@@ -2,6 +2,7 @@ using Immersic.Api.Aplicacion.Comandos;
 using Immersic.Api.Aplicacion.Comun;
 using Immersic.Api.Aplicacion.Consultas;
 using Immersic.Api.Infraestructura;
+using Immersic.Api.Infraestructura.Audio;
 using Immersic.Api.Infraestructura.Gemini;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -31,6 +32,9 @@ builder.Services.AddScoped<EscenasComandos>();
 builder.Services.AddScoped<EtiquetasComandos>();
 builder.Services.AddScoped<PistasComandos>();
 builder.Services.AddScoped<InmersionComandos>();
+
+builder.Services.Configure<OpcionesAudio>(builder.Configuration.GetSection(OpcionesAudio.Seccion));
+builder.Services.AddSingleton<IAlmacenAudio, AlmacenAudioLocal>();
 
 builder.Services.Configure<OpcionesGemini>(builder.Configuration.GetSection(OpcionesGemini.Seccion));
 builder.Services.AddHttpClient<IAnalizadorEscenas, ClienteGemini>((proveedor, cliente) =>

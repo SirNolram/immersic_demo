@@ -8,36 +8,77 @@ namespace Immersic.Api.Aplicacion.Comandos;
 
 public class PistasComandos
 {
-    private readonly ContextoEscritura _db;
+    private const int LargoNombre = 150;
+    private const int LargoNombreOriginal = 255;
 
-    public PistasComandos(ContextoEscritura db)
+    private readonly ContextoEscritura _db;
+    private readonly IAlmacenAudio _almacen;
+
+    public PistasComandos(ContextoEscritura db, IAlmacenAudio almacen)
     {
         _db = db;
+        _almacen = almacen;
     }
 
-    public async Task<Resultado<PistaDto>> CrearAsync(PistaEntradaDto entrada, CancellationToken cancelacion)
+    public async Task<Resultado<PistaDto>> ImportarAsync(PistaImportacionDto entrada, CancellationToken cancelacion)
     {
+        var archivo = entrada.Archivo;
+        if (archivo is null || archivo.Length == 0)
+        {
+            return Fallo.Invalido(nameof(entrada.Archivo), "Elige un archivo de audio que no esté vacío.");
+        }
+
+        if (!FormatosAudio.TryObtenerTipo(archivo.FileName, out var extension, out var tipoContenido))
+        {
+            return Fallo.Invalido(nameof(entrada.Archivo), $"Formato no compatible. Usa un archivo {FormatosAudio.Descripcion}.");
+        }
+
+        if (archivo.Length > FormatosAudio.TamanoMaximoBytes)
+        {
+            return Fallo.Invalido(nameof(entrada.Archivo), "El archivo supera el máximo de 50 MB.");
+        }
+
         var validacion = await ReglasEtiquetas.ValidarAsync(_db, entrada.EtiquetaIds, cancelacion);
         if (validacion.Fallo is not null)
         {
             return validacion.Fallo;
         }
 
+        var nombreOriginal = Recortar(Path.GetFileName(archivo.FileName), LargoNombreOriginal);
+        var nombre = Texto.Limpiar(entrada.Nombre) ?? Recortar(Path.GetFileNameWithoutExtension(nombreOriginal).Trim(), LargoNombre);
+        if (nombre.Length == 0)
+        {
+            nombre = "Canción sin nombre";
+        }
+
+        string guardado;
+        await using (var contenido = archivo.OpenReadStream())
+        {
+            guardado = await _almacen.GuardarAsync(contenido, extension, cancelacion);
+        }
+
         var etiquetas = validacion.Valor!;
         var nueva = new Pista
         {
-            Nombre = entrada.Nombre.Trim(),
+            Nombre = nombre,
             Artista = Texto.Limpiar(entrada.Artista),
-            ArchivoUrl = Texto.Limpiar(entrada.ArchivoUrl),
+            Archivo = guardado,
+            NombreOriginal = nombreOriginal,
+            TipoContenido = tipoContenido,
+            TamanoBytes = archivo.Length,
+            Etiquetas = etiquetas.Select(etiqueta => new PistaEtiqueta { EtiquetaId = etiqueta.Id }).ToList(),
         };
 
-        foreach (var seleccionada in etiquetas)
+        try
         {
-            nueva.Etiquetas.Add(new PistaEtiqueta { EtiquetaId = seleccionada.Id });
+            _db.Pistas.Add(nueva);
+            await _db.SaveChangesAsync(cancelacion);
         }
-
-        _db.Pistas.Add(nueva);
-        await _db.SaveChangesAsync(cancelacion);
+        catch
+        {
+            _almacen.Eliminar(guardado);
+            throw;
+        }
 
         return Mapeos.APistaDto(nueva, etiquetas);
     }
@@ -61,7 +102,6 @@ public class PistasComandos
         var etiquetas = validacion.Valor!;
         existente.Nombre = entrada.Nombre.Trim();
         existente.Artista = Texto.Limpiar(entrada.Artista);
-        existente.ArchivoUrl = Texto.Limpiar(entrada.ArchivoUrl);
 
         var idsNuevos = etiquetas.Select(e => e.Id).ToHashSet();
         var idsActuales = existente.Etiquetas.Select(pe => pe.EtiquetaId).ToHashSet();
@@ -81,12 +121,17 @@ public class PistasComandos
 
     public async Task<Resultado<bool>> EliminarAsync(int id, CancellationToken cancelacion)
     {
-        var eliminadas = await _db.Pistas.Where(p => p.Id == id).ExecuteDeleteAsync(cancelacion);
-        if (eliminadas == 0)
+        var existente = await _db.Pistas.FirstOrDefaultAsync(p => p.Id == id, cancelacion);
+        if (existente is null)
         {
             return Fallo.NoEncontrado($"No existe una pista con id {id}.");
         }
 
+        _db.Pistas.Remove(existente);
+        await _db.SaveChangesAsync(cancelacion);
+        _almacen.Eliminar(existente.Archivo);
         return true;
     }
+
+    private static string Recortar(string texto, int largo) => texto.Length <= largo ? texto : texto[..largo];
 }

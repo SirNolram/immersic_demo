@@ -8,10 +8,12 @@ namespace Immersic.Api.Aplicacion.Consultas;
 public class PistasConsultas
 {
     private readonly ContextoLectura _db;
+    private readonly IAlmacenAudio _almacen;
 
-    public PistasConsultas(ContextoLectura db)
+    public PistasConsultas(ContextoLectura db, IAlmacenAudio almacen)
     {
         _db = db;
+        _almacen = almacen;
     }
 
     public async Task<List<PistaDto>> ListarAsync(string? buscar, string? etiqueta, CancellationToken cancelacion)
@@ -55,5 +57,25 @@ public class PistasConsultas
         }
 
         return Mapeos.APistaDto(encontrada);
+    }
+
+    public async Task<Resultado<AudioPistaDto>> ObtenerAudioAsync(int id, CancellationToken cancelacion)
+    {
+        var pista = await _db.Pistas
+            .Where(p => p.Id == id)
+            .Select(p => new { p.Archivo, p.TipoContenido })
+            .FirstOrDefaultAsync(cancelacion);
+        if (pista is null)
+        {
+            return Fallo.NoEncontrado($"No existe una pista con id {id}.");
+        }
+
+        var ruta = _almacen.ObtenerRuta(pista.Archivo);
+        if (ruta is null)
+        {
+            return Fallo.NoEncontrado("El archivo de audio de esta pista ya no existe en el servidor.");
+        }
+
+        return new AudioPistaDto(ruta, pista.TipoContenido);
     }
 }

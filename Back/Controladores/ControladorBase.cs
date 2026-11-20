@@ -28,6 +28,16 @@ public abstract class ControladorBase : ControllerBase
         return Created(ubicacion(valor), valor);
     }
 
+    protected IActionResult ResponderCon<T>(Resultado<T> resultado, Func<T, IActionResult> exito)
+    {
+        if (resultado.Fallo is not null)
+        {
+            return RespuestaFallo(resultado.Fallo);
+        }
+
+        return exito(resultado.Valor!);
+    }
+
     protected IActionResult ResponderSinContenido(Resultado<bool> resultado)
     {
         if (resultado.Fallo is not null)

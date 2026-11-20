@@ -1,4 +1,5 @@
 using Immersic.Api.Aplicacion.Comandos;
+using Immersic.Api.Aplicacion.Comun;
 using Immersic.Api.Aplicacion.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,12 +16,14 @@ public class PistasComandosController : ControladorBase
     }
 
     [HttpPost]
-    [Consumes("application/json")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(FormatosAudio.TamanoMaximoSolicitud)]
+    [RequestFormLimits(MultipartBodyLengthLimit = FormatosAudio.TamanoMaximoSolicitud)]
     [ProducesResponseType(typeof(PistaDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<PistaDto>> Crear(PistaEntradaDto entrada, CancellationToken cancelacion) =>
-        ResponderCreado(await _comandos.CrearAsync(entrada, cancelacion), creado => $"/api/pistas/{creado.Id}");
+    public async Task<ActionResult<PistaDto>> Importar([FromForm] PistaImportacionDto entrada, CancellationToken cancelacion) =>
+        ResponderCreado(await _comandos.ImportarAsync(entrada, cancelacion), creada => $"/api/pistas/{creada.Id}");
 
     [HttpPut("{id:int}")]
     [Consumes("application/json")]

@@ -26,6 +26,7 @@ GEMINI=$!
   export ConnectionStrings__Escritura="Data Source=$TEMPORAL/prueba.db"
   export ConnectionStrings__Lectura="Data Source=$TEMPORAL/prueba.db"
   export Gemini__UrlBase="http://127.0.0.1:$PUERTO_GEMINI/v1beta"
+  export Audio__Carpeta="$TEMPORAL/audio"
   export ASPNETCORE_URLS="$API"
   exec dotnet bin/Release/net8.0/Immersic.Api.dll
 ) > "$TEMPORAL/api.log" 2>&1 &
@@ -78,6 +79,21 @@ generar() {
     fallar "POST /api/capitulos/$capitulo/inmersion con \"$clave\" respondió $codigo y se esperaba $esperado"
   fi
   echo "ok     POST /api/capitulos/$capitulo/inmersion ($clave) -> $codigo"
+}
+
+importar() {
+  local esperado="$1"
+  shift
+  local codigo
+  codigo="$(curl -s -o "$RESPUESTA" -w "%{http_code}" -X POST "$API/api/pistas" "$@")"
+  if [ "$codigo" != "$esperado" ]; then
+    fallar "POST /api/pistas respondió $codigo y se esperaba $esperado"
+  fi
+  echo "ok     POST /api/pistas (importar) -> $codigo"
+}
+
+audios() {
+  find "$TEMPORAL/audio" -type f | wc -l | tr -d ' '
 }
 
 campo() {
@@ -143,17 +159,45 @@ pedir GET "/api/libros/$LIBRO/capitulos" 200
 comprobar "dos capítulos" 'length == 2'
 
 echo "== Pistas"
-pedir POST /api/pistas 201 "{\"nombre\":\"Puerto en calma\",\"etiquetaIds\":[$CALMA]}"
+python3 - "$TEMPORAL/tono.wav" <<'PY'
+import math, struct, sys, wave
+with wave.open(sys.argv[1], "wb") as audio:
+    audio.setnchannels(1)
+    audio.setsampwidth(2)
+    audio.setframerate(8000)
+    audio.writeframes(b"".join(struct.pack("<h", int(8000 * math.sin(2 * math.pi * 440 * i / 8000))) for i in range(4000)))
+PY
+cp "$TEMPORAL/tono.wav" "$TEMPORAL/Sombras del faro.wav"
+printf 'no es audio' > "$TEMPORAL/nota.txt"
+importar 201 -F "archivo=@$TEMPORAL/tono.wav;type=audio/wav" --form-string "nombre=Puerto en calma" -F "etiquetaIds=$CALMA"
 PISTA_CALMA="$(campo .id)"
-pedir POST /api/pistas 201 "{\"nombre\":\"Sombras del faro\",\"etiquetaIds\":[$TERROR,$INTENSO]}"
+comprobar "datos del archivo importado" ".nombreArchivo == \"tono.wav\" and .tamanoBytes == $(wc -c < "$TEMPORAL/tono.wav") and .urlAudio == \"/api/pistas/$PISTA_CALMA/audio\""
+importar 201 -F "archivo=@$TEMPORAL/Sombras del faro.wav;type=audio/wav" -F "etiquetaIds=$TERROR" -F "etiquetaIds=$INTENSO"
 PISTA_TERROR="$(campo .id)"
-pedir POST /api/pistas 201 "{\"nombre\":\"Fiesta en la plaza\",\"etiquetaIds\":[$FELIZ]}"
-pedir POST /api/pistas 400 "{\"nombre\":\"Solo intensa\",\"etiquetaIds\":[$INTENSO]}"
-pedir POST /api/pistas 400 "{\"nombre\":\"Cuatro\",\"etiquetaIds\":[$CALMA,$TERROR,$FELIZ,$MISTERIO]}"
+comprobar "nombre tomado del archivo" '.nombre == "Sombras del faro" and ([.etiquetas[].nombre] | sort) == ["intenso", "terror"]'
+importar 201 -F "archivo=@$TEMPORAL/tono.wav;type=audio/wav" --form-string "nombre=Fiesta en la plaza" -F "etiquetaIds=$FELIZ"
+FIESTA="$(campo .id)"
+[ "$(audios)" = "3" ] || fallar "Se esperaban 3 archivos de audio guardados"
+echo "ok     3 archivos guardados en el servidor"
+importar 400 -F "archivo=@$TEMPORAL/nota.txt;type=text/plain" -F "etiquetaIds=$CALMA"
+importar 400 --form-string "nombre=Sin archivo" -F "etiquetaIds=$CALMA"
+importar 400 -F "archivo=@$TEMPORAL/tono.wav;type=audio/wav" -F "etiquetaIds=$INTENSO"
+importar 400 -F "archivo=@$TEMPORAL/tono.wav;type=audio/wav" -F "etiquetaIds=$CALMA" -F "etiquetaIds=$TERROR" -F "etiquetaIds=$FELIZ" -F "etiquetaIds=$MISTERIO"
+[ "$(audios)" = "3" ] || fallar "Una importación rechazada dejó un archivo guardado"
+echo "ok     las importaciones rechazadas no guardan archivos"
+CODIGO="$(curl -s -o "$TEMPORAL/descarga.wav" -D "$TEMPORAL/encabezados" -w "%{http_code}" "$API/api/pistas/$PISTA_CALMA/audio")"
+[ "$CODIGO" = "200" ] || fallar "GET audio respondió $CODIGO"
+grep -qi '^content-type: audio/wav' "$TEMPORAL/encabezados" || fallar "El audio no se sirve como audio/wav"
+cmp -s "$TEMPORAL/tono.wav" "$TEMPORAL/descarga.wav" || fallar "El audio descargado no coincide con el importado"
+echo "ok     GET /api/pistas/$PISTA_CALMA/audio -> 200 (mismo archivo)"
+CODIGO="$(curl -s -o /dev/null -w "%{http_code}" -H "Range: bytes=0-99" "$API/api/pistas/$PISTA_CALMA/audio")"
+[ "$CODIGO" = "206" ] || fallar "La descarga por partes respondió $CODIGO"
+echo "ok     descarga por partes -> 206"
+pedir GET /api/pistas/999999/audio 404
 pedir GET "/api/pistas?etiqueta=terror" 200
 comprobar "filtro por etiqueta" 'length == 1'
 pedir PUT "/api/pistas/$PISTA_CALMA" 200 "{\"nombre\":\"Puerto en calma\",\"artista\":\"Orquesta Andina\",\"etiquetaIds\":[$CALMA,$FELIZ]}"
-comprobar "etiquetas de la pista actualizadas" '[.etiquetas[].nombre] | sort == ["calma", "feliz"]'
+comprobar "etiquetas de la pista actualizadas" '[.etiquetas[].nombre] | sort == ["calma", "feliz"] and .nombreArchivo == "tono.wav"'
 
 echo "== Escenas"
 posicion() {
@@ -211,6 +255,10 @@ echo "== Integridad"
 pedir DELETE "/api/etiquetas/$CALMA" 409
 pedir PUT "/api/capitulos/$CAPITULO" 200 '{"titulo":"La tormenta","contenido":"Texto nuevo del capítulo."}'
 comprobar "al cambiar el texto se borran las escenas" '.cantidadEscenas == 0 and .procesadoIa == false'
+pedir DELETE "/api/pistas/$FIESTA" 204
+[ "$(audios)" = "2" ] || fallar "Al eliminar la pista no se borró su archivo"
+echo "ok     al eliminar la pista se borra su audio"
+pedir GET "/api/pistas/$FIESTA/audio" 404
 pedir DELETE "/api/pistas/$PISTA_TERROR" 204
 pedir DELETE "/api/libros/$LIBRO" 204
 pedir GET "/api/capitulos/$EPILOGO" 404
