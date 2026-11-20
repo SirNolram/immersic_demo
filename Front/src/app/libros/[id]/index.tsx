@@ -8,7 +8,7 @@ import { EstadoCarga } from '@/componentes/EstadoCarga';
 import { Fila } from '@/componentes/Fila';
 import { Vacio } from '@/componentes/Vacio';
 import { useCarga } from '@/hooks/useCarga';
-import { colores, estilos } from '@/tema';
+import { colores, estilos, fuente } from '@/tema';
 import { contar } from '@/utilidades/texto';
 
 export default function DetalleLibro() {
@@ -109,6 +109,7 @@ const estilosLibro = StyleSheet.create({
   numero: {
     width: 28,
     color: colores.textoSuave,
+    fontFamily: fuente,
     fontSize: 17,
     fontVariant: ['tabular-nums'],
     textAlign: 'right',
@@ -124,6 +125,7 @@ const estilosLibro = StyleSheet.create({
   },
   textoInsignia: {
     color: colores.textoSuave,
+    fontFamily: fuente,
     fontSize: 12,
   },
 });

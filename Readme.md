@@ -1,6 +1,6 @@
 # Immersic
 
-Aplicación móvil de lectura con música. El usuario organiza sus libros por capítulos y cada capítulo se divide en escenas con etiquetas de emoción (calma, misterio, terror…). Las escenas las puede proponer Gemini con la API key del propio usuario o se pueden marcar a mano. Con esas emociones, la aplicación indica qué pista de su música corresponde a cada escena. A continuación el Readme hecho con IA.
+Aplicación móvil de lectura con música. El usuario organiza sus libros por capítulos y cada capítulo se divide en escenas con etiquetas de emoción (calma, misterio, terror…). Las escenas las puede proponer Gemini con la API key del propio usuario o se pueden marcar a mano. El usuario importa las canciones que tiene en su dispositivo y, con esas emociones, la aplicación le indica y le reproduce la canción que corresponde a cada escena. A continuación el Readme hecho con IA.
 
 ## Estructura
 
@@ -38,7 +38,7 @@ dotnet run
 
 La API queda escuchando en el puerto **5080** de todas las interfaces de red, para que el celular pueda conectarse. La documentación está en **http://localhost:5080/swagger**.
 
-La primera vez se crea el archivo `Back/immersic.db` a partir de `BD/schema.sql`. En Windows puede aparecer un aviso del firewall: hay que permitir el acceso en redes privadas.
+La primera vez se crea el archivo `Back/immersic.db` a partir de `BD/schema.sql`, y las canciones importadas se guardan en la carpeta `Back/audio`. En Windows puede aparecer un aviso del firewall: hay que permitir el acceso en redes privadas.
 
 ### 2. Frontend
 
@@ -72,9 +72,9 @@ La llave se guarda solo en el dispositivo (en el almacenamiento seguro del celul
 | --- | --- |
 | Biblioteca | Ver, agregar y abrir libros |
 | Libro | Ver sus capítulos, agregar uno nuevo y editar o eliminar el libro |
-| Capítulo | Leer el capítulo por escenas, con sus emociones y la pista recomendada para cada una; generar las escenas con IA |
+| Capítulo | Leer el capítulo por escenas y reproducir la canción recomendada para cada una; generar las escenas con IA |
 | Escenas | Generar o volver a generar con IA, cambiar las emociones de una escena, eliminarla o marcar una nueva tocando el párrafo donde empieza |
-| Música | Buscar pistas por nombre o artista y filtrarlas por emoción; agregar, editar y eliminar pistas. Las pistas son referencias (nombre, artista y enlace), la app no reproduce audio |
+| Música | Importar canciones desde el dispositivo (MP3, M4A, AAC o WAV de hasta 50 MB), reproducirlas, buscarlas por nombre o artista, filtrarlas por emoción, editarlas y eliminarlas |
 | Ajustes | Dirección del servidor, API key de Gemini y administración de las etiquetas de emoción |
 
 ## Arquitectura del frontend
@@ -85,6 +85,7 @@ Front/src/
   api/              Llamadas a la API, separadas en consultas y comandos
   componentes/      Botones, campos, filas, chips de emoción y formularios
   configuracion/    Dirección del servidor y API key de Gemini guardadas en el dispositivo
+  reproduccion/     Reproductor de audio compartido por toda la app (expo-audio)
   hooks/            Carga de datos, acciones con estado de espera y generación de escenas
   tipos/            Modelos que devuelve la API
   utilidades/       Diálogos, almacenamiento seguro y manejo de texto
@@ -106,6 +107,7 @@ La generación de escenas es un comando más (`InmersionComandos`). La capa de a
 Back/
   Dominio/            Entidades (una por tabla)
   Infraestructura/    Contextos de lectura y escritura, conexión e inicialización de la base de datos
+    Audio/            Guardado de las canciones importadas en disco
     Gemini/           Cliente HTTP de Gemini, instrucciones y esquema de respuesta
   Aplicacion/
     Comun/            Resultado de las operaciones, reglas de etiquetas, recomendador de música y ubicador de escenas
@@ -147,9 +149,10 @@ Back/
 | DELETE | `/api/etiquetas/{id}` | Elimina una etiqueta que no esté en uso |
 | GET | `/api/pistas?buscar=&etiqueta=` | Lista las pistas |
 | GET | `/api/pistas/{id}` | Obtiene una pista |
-| POST | `/api/pistas` | Registra una pista con 1 a 3 etiquetas |
-| PUT | `/api/pistas/{id}` | Actualiza una pista |
-| DELETE | `/api/pistas/{id}` | Elimina una pista |
+| GET | `/api/pistas/{id}/audio` | Descarga o reproduce el audio de la pista (admite descargas por partes) |
+| POST | `/api/pistas` | Importa una canción: formulario `multipart/form-data` con `archivo`, `nombre`, `artista` y de 1 a 3 `etiquetaIds` |
+| PUT | `/api/pistas/{id}` | Actualiza el nombre, el artista y las etiquetas de una pista |
+| DELETE | `/api/pistas/{id}` | Elimina una pista y su archivo de audio |
 
 Los errores se devuelven en formato *Problem Details*: `400` para datos inválidos, `404` si el recurso no existe y `409` para conflictos (por ejemplo, un número de capítulo repetido o una etiqueta en uso). Al generar escenas, los errores de Gemini se traducen así: `401` API key inválida, `403` API key sin permiso, `422` contenido bloqueado, `429` cuota agotada, `502` Gemini no respondió algo utilizable y `504` tiempo de espera agotado.
 
@@ -162,6 +165,10 @@ En `Back/appsettings.json`, sección `Gemini`:
 | `Modelo` | `gemini-3.5-flash` | Modelo que se usa para analizar los capítulos |
 | `UrlBase` | `https://generativelanguage.googleapis.com/v1beta` | Dirección de la API de Gemini |
 | `TiempoEsperaSegundos` | `150` | Tiempo máximo de espera por capítulo |
+
+### Canciones importadas
+
+Las canciones se guardan en la carpeta indicada en `Audio:Carpeta` de `Back/appsettings.json` (por defecto `Back/audio`), con un nombre único. La base de datos guarda ese nombre, el nombre original del archivo, su tipo y su tamaño. Se aceptan archivos MP3, M4A, AAC y WAV de hasta 50 MB.
 
 ## Base de datos
 
@@ -177,7 +184,7 @@ sqlite3 immersic.db < BD/schema.sql
 | `capitulos` | Capítulos de cada libro (hasta 60.000 caracteres) y si sus escenas las generó la IA (`procesado_ia`) |
 | `escenas` | Escenas de cada capítulo, marcadas por la posición donde empiezan |
 | `etiquetas` | Emociones: suspenso, accion, calma, misterio, perdida, romance, terror, epico, feliz, triste, combate e intenso |
-| `pistas` | Pistas de música |
+| `pistas` | Canciones importadas: nombre, artista y datos del archivo de audio |
 | `escena_etiquetas` | De 1 a 3 etiquetas por escena |
 | `pista_etiquetas` | De 1 a 3 etiquetas por pista |
 

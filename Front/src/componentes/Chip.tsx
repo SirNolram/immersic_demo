@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colorEmocion, colores } from '@/tema';
+import { colorEmocion, colores, fuente } from '@/tema';
 
 interface Props {
   nombre: string;
@@ -58,6 +58,7 @@ const estilosChip = StyleSheet.create({
     borderRadius: 4,
   },
   texto: {
+    fontFamily: fuente,
     fontSize: 13,
     fontWeight: '500',
   },

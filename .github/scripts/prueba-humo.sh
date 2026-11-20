@@ -197,7 +197,7 @@ pedir GET /api/pistas/999999/audio 404
 pedir GET "/api/pistas?etiqueta=terror" 200
 comprobar "filtro por etiqueta" 'length == 1'
 pedir PUT "/api/pistas/$PISTA_CALMA" 200 "{\"nombre\":\"Puerto en calma\",\"artista\":\"Orquesta Andina\",\"etiquetaIds\":[$CALMA,$FELIZ]}"
-comprobar "etiquetas de la pista actualizadas" '[.etiquetas[].nombre] | sort == ["calma", "feliz"] and .nombreArchivo == "tono.wav"'
+comprobar "etiquetas de la pista actualizadas" '([.etiquetas[].nombre] | sort) == ["calma", "feliz"] and .nombreArchivo == "tono.wav"'
 
 echo "== Escenas"
 posicion() {

@@ -1,17 +1,16 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { consultasCapitulos } from '@/api/capitulos';
 import { Boton } from '@/componentes/Boton';
 import { BotonIcono } from '@/componentes/BotonIcono';
-import { Chip } from '@/componentes/Chip';
+import { BotonReproducir } from '@/componentes/BotonReproducir';
 import { EstadoCarga } from '@/componentes/EstadoCarga';
 import { Vacio } from '@/componentes/Vacio';
 import { useCarga } from '@/hooks/useCarga';
 import { useGenerarEscenas } from '@/hooks/useGenerarEscenas';
-import { colorDeEscena, colores, estilos } from '@/tema';
-import type { Pista } from '@/tipos/modelos';
+import { colores, estilos, fuente } from '@/tema';
+import type { EtiquetaResumen, Pista } from '@/tipos/modelos';
 import { contar } from '@/utilidades/texto';
 
 export default function LeerCapitulo() {
@@ -104,17 +103,10 @@ export default function LeerCapitulo() {
               {inicioPrimera > 0 ? (
                 <Text style={estilos.lectura}>{contenido.slice(0, inicioPrimera).trim()}</Text>
               ) : null}
-              {escenas.map((escena) => (
-                <View
-                  key={escena.escenaId}
-                  style={[estilosLector.escena, { borderLeftColor: colorDeEscena(escena.etiquetas) }]}
-                >
-                  <View style={estilos.fila}>
-                    {escena.etiquetas.map((etiqueta) => (
-                      <Chip key={etiqueta.id} nombre={etiqueta.nombre} />
-                    ))}
-                  </View>
-                  <Musica pista={escena.pistaRecomendada} />
+              {escenas.map((escena, indice) => (
+                <View key={escena.escenaId} style={estilosLector.escena}>
+                  {indice > 0 ? <View style={estilos.separador} /> : null}
+                  <CancionEscena pista={escena.pistaRecomendada} etiquetas={escena.etiquetas} />
                   <Text style={estilos.lectura}>
                     {contenido.slice(escena.posicionInicio, escena.posicionFin).trim()}
                   </Text>
@@ -137,35 +129,26 @@ export default function LeerCapitulo() {
   );
 }
 
-function Musica({ pista }: { pista: Pista | null }) {
+function CancionEscena({ pista, etiquetas }: { pista: Pista | null; etiquetas: EtiquetaResumen[] }) {
   if (!pista) {
-    return (
-      <View style={estilosLector.musica}>
-        <Ionicons name="musical-note-outline" size={16} color={colores.textoSuave} />
-        <Text style={estilos.textoSuave}>Ninguna pista tiene estas emociones todavía.</Text>
-      </View>
-    );
+    const emociones = etiquetas.map((etiqueta) => etiqueta.nombre).join(', ');
+    return <Text style={estilos.textoSuave}>Ninguna canción tiene las emociones de esta escena ({emociones}).</Text>;
   }
 
-  const enlace = pista.archivoUrl;
   return (
-    <Pressable
-      disabled={!enlace}
-      onPress={() => enlace && void Linking.openURL(enlace)}
-      style={estilosLector.musica}
-      accessibilityRole={enlace ? 'link' : undefined}
-    >
-      <Ionicons name="musical-note" size={16} color={colores.texto} />
-      <Text style={estilosLector.pista} numberOfLines={1}>
-        {pista.nombre}
-      </Text>
-      {pista.artista ? (
-        <Text style={[estilos.textoSuave, { flexShrink: 1 }]} numberOfLines={1}>
-          {pista.artista}
+    <View style={estilosLector.cancion}>
+      <BotonReproducir pista={pista} tamano={36} />
+      <View style={{ flex: 1 }}>
+        <Text style={estilosLector.nombreCancion} numberOfLines={1}>
+          {pista.nombre}
         </Text>
-      ) : null}
-      {enlace ? <Ionicons name="open-outline" size={15} color={colores.textoSuave} /> : null}
-    </Pressable>
+        {pista.artista ? (
+          <Text style={estilos.textoSuave} numberOfLines={1}>
+            {pista.artista}
+          </Text>
+        ) : null}
+      </View>
+    </View>
   );
 }
 
@@ -186,20 +169,17 @@ const estilosLector = StyleSheet.create({
     borderColor: colores.linea,
   },
   escena: {
-    gap: 10,
-    paddingLeft: 14,
-    paddingVertical: 4,
-    borderLeftWidth: 3,
+    gap: 14,
   },
-  musica: {
+  cancion: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
-  pista: {
-    flexShrink: 1,
+  nombreCancion: {
     color: colores.texto,
+    fontFamily: fuente,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });

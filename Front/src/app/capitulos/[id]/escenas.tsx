@@ -12,7 +12,7 @@ import { SelectorEtiquetas } from '@/componentes/SelectorEtiquetas';
 import { useAccion } from '@/hooks/useAccion';
 import { useCarga } from '@/hooks/useCarga';
 import { useGenerarEscenas } from '@/hooks/useGenerarEscenas';
-import { colorDeEscena, colores, estilos, fuenteLectura } from '@/tema';
+import { colorDeEscena, colores, estilos, fuente } from '@/tema';
 import type { Escena } from '@/tipos/modelos';
 import { confirmar } from '@/utilidades/dialogos';
 import { dividirEnLineas } from '@/utilidades/texto';
@@ -241,9 +241,9 @@ const estilosEscenas = StyleSheet.create({
   },
   fragmento: {
     color: colores.texto,
-    fontFamily: fuenteLectura,
-    fontSize: 16,
-    lineHeight: 24,
+    fontFamily: fuente,
+    fontSize: 15,
+    lineHeight: 22,
   },
   linea: {
     paddingVertical: 10,
@@ -261,8 +261,8 @@ const estilosEscenas = StyleSheet.create({
   },
   textoLinea: {
     color: colores.texto,
-    fontFamily: fuenteLectura,
-    fontSize: 15,
-    lineHeight: 22,
+    fontFamily: fuente,
+    fontSize: 14,
+    lineHeight: 21,
   },
 });

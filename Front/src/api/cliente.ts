@@ -17,6 +17,7 @@ interface Problema {
 interface Opciones {
   metodo?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   cuerpo?: unknown;
+  formulario?: FormData;
   encabezados?: Record<string, string>;
   tiempoEsperaMs?: number;
 }
@@ -27,6 +28,10 @@ let urlBase = 'http://localhost:5080';
 
 export function establecerUrlBase(url: string): void {
   urlBase = url.trim().replace(/\/+$/, '');
+}
+
+export function urlCompleta(ruta: string): string {
+  return `${urlBase}${ruta}`;
 }
 
 async function leerMensaje(respuesta: Response): Promise<string> {
@@ -55,7 +60,7 @@ export async function solicitar<T>(ruta: string, opciones: Opciones = {}): Promi
     respuesta = await fetch(`${urlBase}${ruta}`, {
       method: opciones.metodo ?? 'GET',
       headers: encabezados,
-      body: opciones.cuerpo === undefined ? undefined : JSON.stringify(opciones.cuerpo),
+      body: opciones.formulario ?? (opciones.cuerpo === undefined ? undefined : JSON.stringify(opciones.cuerpo)),
       signal: controlador.signal,
     });
   } catch {

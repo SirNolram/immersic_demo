@@ -1,18 +1,18 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colores, fuenteLectura } from '@/tema';
+import { colores, fuente } from '@/tema';
 
 interface Props {
   titulo: string;
   detalle?: string;
   inicio?: ReactNode;
   pie?: ReactNode;
-  serif?: boolean;
+  destacado?: boolean;
   alPresionar: () => void;
 }
 
-export function Fila({ titulo, detalle, inicio, pie, serif = false, alPresionar }: Props) {
+export function Fila({ titulo, detalle, inicio, pie, destacado = false, alPresionar }: Props) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -21,7 +21,7 @@ export function Fila({ titulo, detalle, inicio, pie, serif = false, alPresionar 
     >
       {inicio}
       <View style={estilosFila.cuerpo}>
-        <Text style={[estilosFila.titulo, serif && estilosFila.serif]} numberOfLines={2}>
+        <Text style={[estilosFila.titulo, destacado && estilosFila.destacado]} numberOfLines={2}>
           {titulo}
         </Text>
         {detalle ? <Text style={estilosFila.detalle}>{detalle}</Text> : null}
@@ -48,16 +48,17 @@ const estilosFila = StyleSheet.create({
   },
   titulo: {
     color: colores.texto,
+    fontFamily: fuente,
     fontSize: 16,
     fontWeight: '500',
   },
-  serif: {
-    fontFamily: fuenteLectura,
-    fontSize: 19,
-    fontWeight: 'normal',
+  destacado: {
+    fontSize: 18,
+    fontWeight: '600',
   },
   detalle: {
     color: colores.textoSuave,
+    fontFamily: fuente,
     fontSize: 14,
   },
 });

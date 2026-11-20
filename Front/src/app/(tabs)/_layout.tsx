@@ -3,7 +3,7 @@ import { router, Tabs } from 'expo-router';
 import { View, type ColorValue } from 'react-native';
 import type { NombreIcono } from '@/componentes/Boton';
 import { BotonIcono } from '@/componentes/BotonIcono';
-import { colores } from '@/tema';
+import { colores, fuente } from '@/tema';
 
 function icono(activo: NombreIcono, inactivo: NombreIcono) {
   return ({ focused, color, size }: { focused: boolean; color: ColorValue; size: number }) => (
@@ -25,10 +25,12 @@ export default function DisenoPestanas() {
       screenOptions={{
         headerStyle: { backgroundColor: colores.fondo },
         headerTintColor: colores.texto,
+        headerTitleStyle: { fontFamily: fuente },
         headerShadowVisible: false,
         tabBarStyle: { backgroundColor: colores.superficie, borderTopColor: colores.linea },
         tabBarActiveTintColor: colores.texto,
         tabBarInactiveTintColor: colores.textoSuave,
+        tabBarLabelStyle: { fontFamily: fuente },
         sceneStyle: { backgroundColor: colores.fondo },
       }}
     >
@@ -45,7 +47,7 @@ export default function DisenoPestanas() {
         options={{
           title: 'Música',
           tabBarIcon: icono('musical-notes', 'musical-notes-outline'),
-          headerRight: () => botonAgregar('Agregar pista', '/pistas/nueva'),
+          headerRight: () => botonAgregar('Importar canción', '/pistas/nueva'),
         }}
       />
       <Tabs.Screen

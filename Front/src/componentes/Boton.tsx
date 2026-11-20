@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
-import { colores } from '@/tema';
+import { colores, fuente } from '@/tema';
 
 export type NombreIcono = ComponentProps<typeof Ionicons>['name'];
 
@@ -82,6 +82,7 @@ const estilosBoton = StyleSheet.create({
     opacity: 0.45,
   },
   texto: {
+    fontFamily: fuente,
     fontSize: 15,
     fontWeight: '600',
   },

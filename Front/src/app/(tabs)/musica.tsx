@@ -3,14 +3,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { consultasEtiquetas } from '@/api/etiquetas';
 import { consultasPistas } from '@/api/pistas';
+import { BarraReproduccion } from '@/componentes/BarraReproduccion';
 import { Boton } from '@/componentes/Boton';
+import { BotonReproducir } from '@/componentes/BotonReproducir';
 import { Chip } from '@/componentes/Chip';
 import { EstadoCarga } from '@/componentes/EstadoCarga';
 import { Fila } from '@/componentes/Fila';
 import { Vacio } from '@/componentes/Vacio';
 import { useConfiguracion } from '@/configuracion/ContextoConfiguracion';
 import { useCarga } from '@/hooks/useCarga';
-import { colores, estilos } from '@/tema';
+import { colores, estilos, fuente } from '@/tema';
 
 export default function Musica() {
   const router = useRouter();
@@ -35,6 +37,7 @@ export default function Musica() {
   }, [etiqueta, lista, recargar]);
 
   const filtrando = buscar.trim() !== '' || etiqueta !== '';
+  const importar = () => router.push('/pistas/nueva');
 
   return (
     <FlatList
@@ -45,6 +48,7 @@ export default function Musica() {
       keyboardShouldPersistTaps="handled"
       ListHeaderComponent={
         <View style={estilos.cabeceraLista}>
+          <BarraReproduccion />
           <TextInput
             style={estilosMusica.buscador}
             placeholder="Buscar por canción o artista"
@@ -77,13 +81,13 @@ export default function Musica() {
       ListEmptyComponent={
         datos ? (
           filtrando ? (
-            <Vacio icono="search-outline" mensaje="Ninguna pista coincide con la búsqueda." />
+            <Vacio icono="search-outline" mensaje="Ninguna canción coincide con la búsqueda." />
           ) : (
             <Vacio
               icono="musical-notes-outline"
-              mensaje="Registra las canciones que escuchas al leer y marca qué emociones transmiten."
+              mensaje="Importa las canciones que tienes en tu celular y marca qué emociones transmiten."
             >
-              <Boton titulo="Agregar pista" icono="add" alPresionar={() => router.push('/pistas/nueva')} />
+              <Boton titulo="Importar canción" icono="download-outline" alPresionar={importar} />
             </Vacio>
           )
         ) : undefined
@@ -92,6 +96,7 @@ export default function Musica() {
         <Fila
           titulo={item.nombre}
           detalle={item.artista ?? 'Artista desconocido'}
+          inicio={<BotonReproducir pista={item} />}
           pie={
             <View style={[estilos.fila, { marginTop: 4 }]}>
               {item.etiquetas.map((e) => (
@@ -113,6 +118,7 @@ const estilosMusica = StyleSheet.create({
     borderWidth: 1,
     borderColor: colores.linea,
     color: colores.texto,
+    fontFamily: fuente,
     fontSize: 16,
     paddingHorizontal: 18,
     paddingVertical: 11,

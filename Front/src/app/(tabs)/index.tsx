@@ -6,7 +6,7 @@ import { EstadoCarga } from '@/componentes/EstadoCarga';
 import { Fila } from '@/componentes/Fila';
 import { Vacio } from '@/componentes/Vacio';
 import { useCarga } from '@/hooks/useCarga';
-import { colores, estilos, fuenteLectura } from '@/tema';
+import { colores, estilos, fuente } from '@/tema';
 import { contar } from '@/utilidades/texto';
 
 export default function Biblioteca() {
@@ -32,7 +32,7 @@ export default function Biblioteca() {
       }
       renderItem={({ item }) => (
         <Fila
-          serif
+          destacado
           titulo={item.titulo}
           detalle={item.autor ?? 'Autor desconocido'}
           pie={<Text style={estilos.textoSuave}>{contar(item.cantidadCapitulos, 'capítulo', 'capítulos')}</Text>}
@@ -61,7 +61,8 @@ const estilosBiblioteca = StyleSheet.create({
   },
   inicial: {
     color: colores.texto,
-    fontFamily: fuenteLectura,
+    fontFamily: fuente,
     fontSize: 22,
+    fontWeight: '700',
   },
 });

@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
-import { colores, fuenteLectura } from '@/tema';
+import { colores, fuente } from '@/tema';
 
 interface Props extends TextInputProps {
   etiqueta: string;
@@ -28,6 +28,7 @@ const estilosCampo = StyleSheet.create({
   },
   etiqueta: {
     color: colores.textoSuave,
+    fontFamily: fuente,
     fontSize: 14,
   },
   entrada: {
@@ -36,6 +37,7 @@ const estilosCampo = StyleSheet.create({
     borderColor: colores.linea,
     borderRadius: 10,
     color: colores.texto,
+    fontFamily: fuente,
     fontSize: 16,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -43,12 +45,12 @@ const estilosCampo = StyleSheet.create({
   multilinea: {
     minHeight: 280,
     textAlignVertical: 'top',
-    fontFamily: fuenteLectura,
-    fontSize: 17,
-    lineHeight: 26,
+    fontSize: 16,
+    lineHeight: 24,
   },
   ayuda: {
     color: colores.textoSuave,
+    fontFamily: fuente,
     fontSize: 13,
   },
 });

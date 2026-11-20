@@ -1,7 +1,8 @@
 import { DarkTheme, Stack, ThemeProvider, type Theme } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ProveedorConfiguracion } from '@/configuracion/ContextoConfiguracion';
-import { colores } from '@/tema';
+import { ProveedorReproduccion } from '@/reproduccion/ContextoReproduccion';
+import { colores, fuente } from '@/tema';
 
 const temaImmersic: Theme = {
   ...DarkTheme,
@@ -19,20 +20,23 @@ const temaImmersic: Theme = {
 export default function DisenoRaiz() {
   return (
     <ProveedorConfiguracion>
-      <ThemeProvider value={temaImmersic}>
-        <StatusBar style="light" />
-        <Stack
-          screenOptions={{
-            headerStyle: { backgroundColor: colores.fondo },
-            headerTintColor: colores.texto,
-            headerShadowVisible: false,
-            headerBackButtonDisplayMode: 'minimal',
-            contentStyle: { backgroundColor: colores.fondo },
-          }}
-        >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-      </ThemeProvider>
+      <ProveedorReproduccion>
+        <ThemeProvider value={temaImmersic}>
+          <StatusBar style="light" />
+          <Stack
+            screenOptions={{
+              headerStyle: { backgroundColor: colores.fondo },
+              headerTintColor: colores.texto,
+              headerTitleStyle: { fontFamily: fuente },
+              headerShadowVisible: false,
+              headerBackButtonDisplayMode: 'minimal',
+              contentStyle: { backgroundColor: colores.fondo },
+            }}
+          >
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+        </ThemeProvider>
+      </ProveedorReproduccion>
     </ProveedorConfiguracion>
   );
 }

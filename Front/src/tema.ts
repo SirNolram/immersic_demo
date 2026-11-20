@@ -11,10 +11,10 @@ export const colores = {
   peligro: '#E0686B',
 };
 
-export const fuenteLectura = Platform.select({
-  ios: 'Georgia',
-  android: 'serif',
-  default: 'Georgia, "Times New Roman", serif',
+export const fuente = Platform.select({
+  ios: 'Arial',
+  android: 'sans-serif',
+  default: 'Arial, Helvetica, sans-serif',
 });
 
 const coloresEmocion: Record<string, string> = {
@@ -74,28 +74,33 @@ export const estilos = StyleSheet.create({
   },
   titulo: {
     color: colores.texto,
-    fontFamily: fuenteLectura,
-    fontSize: 26,
-    lineHeight: 32,
+    fontFamily: fuente,
+    fontSize: 25,
+    fontWeight: '700',
+    lineHeight: 31,
   },
   seccion: {
     color: colores.texto,
+    fontFamily: fuente,
     fontSize: 17,
     fontWeight: '600',
     marginTop: 8,
   },
   texto: {
     color: colores.texto,
+    fontFamily: fuente,
     fontSize: 15,
     lineHeight: 21,
   },
   textoSuave: {
     color: colores.textoSuave,
+    fontFamily: fuente,
     fontSize: 14,
     lineHeight: 20,
   },
   error: {
     color: colores.peligro,
+    fontFamily: fuente,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -105,8 +110,8 @@ export const estilos = StyleSheet.create({
   },
   lectura: {
     color: colores.texto,
-    fontFamily: fuenteLectura,
-    fontSize: 18,
-    lineHeight: 30,
+    fontFamily: fuente,
+    fontSize: 17,
+    lineHeight: 28,
   },
 });

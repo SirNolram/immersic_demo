@@ -50,15 +50,24 @@ export interface Pista {
   id: number;
   nombre: string;
   artista: string | null;
-  archivoUrl: string | null;
+  nombreArchivo: string;
+  tamanoBytes: number;
+  urlAudio: string;
   etiquetas: EtiquetaResumen[];
 }
 
 export interface PistaEntrada {
   nombre: string;
   artista: string | null;
-  archivoUrl: string | null;
   etiquetaIds: number[];
+}
+
+export interface ArchivoAudio {
+  uri: string;
+  nombre: string;
+  tipo: string;
+  tamanoBytes: number | null;
+  archivoWeb?: Blob;
 }
 
 export interface Escena {
